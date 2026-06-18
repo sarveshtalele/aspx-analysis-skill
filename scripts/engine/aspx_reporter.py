@@ -68,6 +68,8 @@ def generate_project_overview(index: dict) -> str:
         f'| Pages using Master Page | {stats["pages_with_master"]} |',
         f'| Pages with AJAX (UpdatePanel) | {stats["pages_with_ajax"]} |',
         f'| Pages with Direct SQL | {stats["pages_with_sql_direct"]} |',
+        f'| Pages with Validators | {stats.get("pages_with_validators", 0)} |',
+        f'| Named Routes (RouteConfig) | {stats.get("total_named_routes", 0)} |',
     ]
 
     # Auth breakdown
@@ -481,6 +483,15 @@ def _page_card(page: dict, full: bool = False) -> List[str]:
             summary = ', '.join(f"{v}× {k}" for k, v in sorted(types.items(), key=lambda x: -x[1]))
             lines.append(f"**Controls ({len(form_ctrls)}):** {summary}")
 
+    # Display controls (asp:Label, asp:Image, etc.)
+    disp = page.get('display_controls', [])
+    if disp and full:
+        dtypes: Dict[str, int] = {}
+        for c in disp:
+            dtypes[c['type']] = dtypes.get(c['type'], 0) + 1
+        dsummary = ', '.join(f"{v}× {k}" for k, v in sorted(dtypes.items(), key=lambda x: -x[1]))
+        lines.append(f"**Display Controls ({len(disp)}):** {dsummary}")
+
     # Data sources
     ds = page.get('data_sources', [])
     if ds:
@@ -547,15 +558,19 @@ def _page_card(page: dict, full: bool = False) -> List[str]:
         if len(nav_out) > 8:
             lines.append(f"- _{len(nav_out) - 8} more…_")
 
-    # Internal links
+    # Internal links — .aspx refs and named-route expressions
     nav_links = page.get('navigation_links', [])
-    aspx_links = [n for n in nav_links if '.aspx' in n.get('url', '').lower()]
+    aspx_links = [n for n in nav_links
+                  if '.aspx' in n.get('url', '').lower()
+                  or n.get('type') == 'route'
+                  or n.get('route_name')]
     if aspx_links and full:
         lines.append('')
         lines.append(f"**Internal Links ({len(aspx_links)}):**")
         for n in aspx_links[:8]:
             txt = f' — "{n["text"]}"' if n.get('text') else ''
-            lines.append(f"- `{n['url']}`{txt}")
+            rn  = f' [route: {n["route_name"]}]' if n.get('route_name') else ''
+            lines.append(f"- `{n['url']}`{txt}{rn}")
         if len(aspx_links) > 8:
             lines.append(f"- _{len(aspx_links) - 8} more…_")
 

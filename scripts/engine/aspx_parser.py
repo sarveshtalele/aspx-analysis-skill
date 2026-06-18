@@ -39,8 +39,21 @@ _ASPNET_TAG = re.compile(
 )
 _ID_ATTR       = re.compile(r'\bID\s*=\s*"([^"]+)"',             re.IGNORECASE)
 _TEXT_ATTR     = re.compile(r'\bText\s*=\s*"([^"]+)"',           re.IGNORECASE)
-_NAV_URL       = re.compile(r'\bNavigateUrl\s*=\s*"([^"]+)"',    re.IGNORECASE)
-_ANCHOR_HREF   = re.compile(r'<a\b[^>]*\bhref\s*=\s*"([^"]+)"', re.IGNORECASE)
+_NAV_URL       = re.compile(r'\bNavigateUrl\s*=\s*(?:"([^"]+)"|\'([^\']+)\')', re.IGNORECASE)
+_ANCHOR_HREF   = re.compile(r'<a\b[^>]*\bhref\s*=\s*"([^"]+)"',        re.IGNORECASE)
+_ROUTE_URL     = re.compile(
+    r'(?:RouteUrl:RouteName=|GetRouteUrl\s*\(\s*["\'])(\w+)',
+    re.IGNORECASE,
+)
+# Separate full-content scan for NavigateUrl attrs containing route expressions.
+# Needed because _ASPNET_TAG's [^>]*? truncates at > inside <%# %> expressions,
+# which cuts off the closing quote of single-quoted attribute values.
+_NAVURL_ROUTE  = re.compile(
+    r'\bNavigateUrl\s*=\s*'
+    r'(?:\'([^\']*(?:RouteUrl|GetRouteUrl)[^\']*)\''
+    r'|"([^"]*(?:RouteUrl|GetRouteUrl)[^"]*)")',
+    re.IGNORECASE,
+)
 _CONTENT_PH    = re.compile(
     r'<asp:ContentPlaceHolder\b[^>]*\bID\s*=\s*"([^"]+)"', re.IGNORECASE
 )
@@ -55,7 +68,10 @@ _FORM_CTRL_TYPES = {
     'calendar', 'multiview', 'wizard', 'panel',
     'gridview', 'detailsview', 'formview', 'listview', 'repeater',
     'datalist', 'datagrid',
+    'requiredfieldvalidator', 'rangevalidator', 'comparevalidator',
+    'regularexpressionvalidator', 'customvalidator', 'validationsummary',
 }
+_DISPLAY_CTRL_TYPES = {'label', 'literal', 'image', 'bulletedlist'}
 _DATA_SRC_TYPES = {
     'sqldatasource', 'objectdatasource', 'entitydatasource',
     'linqdatasource', 'xmldatasource', 'sitemapdatasource',
@@ -92,6 +108,16 @@ _IS_IN_ROLE   = re.compile(r'User\.IsInRole\s*\(\s*"([^"]+)"',      re.IGNORECAS
 _AUTHORIZE    = re.compile(r'\[Authorize\b([^\]]*)\]',               re.IGNORECASE)
 _AUTH_ROLE    = re.compile(r'Roles\s*=\s*"([^"]+)"',                re.IGNORECASE)
 _IS_AUTH      = re.compile(r'Request\.IsAuthenticated',              re.IGNORECASE)
+
+# ---------------------------------------------------------------------------
+# Domain subject inference — folders / path segments to skip
+# ---------------------------------------------------------------------------
+
+_SUBJECT_SKIP = {
+    'src', 'app', 'ui', 'web', 'forms', 'pages', 'views', 'areas',
+    'modules', 'controls', 'shared', 'common', 'helpers', 'extensions',
+    'website', 'wwwroot', '',
+}
 
 # ---------------------------------------------------------------------------
 # Functional area keyword map
@@ -134,6 +160,19 @@ def _parse_attrs(text: str) -> Dict[str, str]:
     return {k.lower(): v for k, v in _ATTR_KV.findall(text)}
 
 
+def _infer_subject(name: str, folder: str, imports: List[str]) -> str:
+    """Best-effort domain subject from folder path (e.g. 'Catalog', 'Orders')."""
+    parts = folder.replace('\\', '/').split('/')
+    for part in reversed(parts):
+        p_low = part.lower()
+        if (p_low not in _SUBJECT_SKIP
+                and not p_low.endswith('solution')
+                and not p_low.endswith('webforms')
+                and len(part) > 2):
+            return part
+    return ''
+
+
 def _infer_functional_area(name: str, folder: str, imports: List[str]) -> str:
     combined = (name + ' ' + folder.replace('\\', '/').replace('/', ' ')).lower()
     for area, keywords in _AREA_KEYWORDS.items():
@@ -148,9 +187,10 @@ def _infer_functional_area(name: str, folder: str, imports: List[str]) -> str:
 
 
 def _infer_page_purpose(name: str, folder: str, ctrl_types: set, has_grid: bool,
-                        has_form: bool) -> str:
+                        has_form: bool, imports: List[str] = None) -> str:
     n = name.lower()
     folder_low = folder.lower()
+    hint = _infer_subject(name, folder, imports or [])
 
     if 'login' in n or 'signin' in n:
         return 'User authentication — login form'
@@ -165,21 +205,23 @@ def _infer_page_purpose(name: str, folder: str, ctrl_types: set, has_grid: bool,
     if n in {'default', 'index', 'home', 'main', 'landing'}:
         return 'Application home page / dashboard'
     if 'search' in n:
-        return f'Search interface for {name.replace("Search", "").strip() or "records"}'
+        subject = re.sub(r'(?i)\bSearches?\b', '', name).strip() or hint or 'records'
+        return f'Search interface for {subject}'
     if 'list' in n or has_grid:
-        subject = name.replace('List', '').replace('Grid', '').strip() or 'records'
+        subject = re.sub(r'(?i)\bLists?\b|\bGrids?\b', '', name).strip() or hint or 'records'
         return f'Data list / grid view — {subject}'
     if 'edit' in n or 'form' in n:
-        subject = name.replace('Edit', '').replace('Form', '').strip() or 'record'
+        subject = re.sub(r'(?i)\bEdits?\b|\bForms?\b', '', name).strip() or hint or 'record'
         return f'Edit / data entry form — {subject}'
     if 'view' in n or 'detail' in n:
-        subject = name.replace('View', '').replace('Detail', '').strip() or 'record'
+        subject = re.sub(r'(?i)\bDetails?\b|\bViews?\b', '', name).strip() or hint or 'record'
         return f'Detail / read-only view — {subject}'
     if 'create' in n or 'add' in n or 'new' in n:
-        subject = re.sub(r'^(create|add|new)', '', n, flags=re.I).strip() or 'record'
+        subject = re.sub(r'(?i)\b(?:create|add|new)\b', '', name).strip() or hint or 'record'
         return f'Create new {subject}'
     if 'delete' in n or 'remove' in n:
-        return f'Delete / remove confirmation — {name}'
+        subject = hint or name
+        return f'Delete / remove confirmation — {subject}'
     if 'report' in n:
         return f'Report output — {name.replace("Report", "").strip()}'
     if 'admin' in n or 'admin' in folder_low:
@@ -263,6 +305,7 @@ def parse_aspx_page(record: dict) -> dict:
         'base_class':          '',
         'controls_registered': [],
         'form_controls':       [],
+        'display_controls':    [],
         'data_sources':        [],
         'content_areas':       [],
         'content_placeholders':[],
@@ -316,6 +359,8 @@ def parse_aspx_page(record: dict) -> dict:
         if ctype in _FORM_CTRL_TYPES:
             result['form_controls'].append(ctrl_info)
             ctrl_types.add(ctype)
+        elif ctype in _DISPLAY_CTRL_TYPES:
+            result['display_controls'].append(ctrl_info)
         elif ctype in _DATA_SRC_TYPES:
             result['data_sources'].append(ctrl_info)
         elif ctype in _AJAX_TYPES:
@@ -323,11 +368,16 @@ def parse_aspx_page(record: dict) -> dict:
         elif ctype in _LOGIN_TYPES:
             result['has_login_controls'] = True
         elif ctype == 'hyperlink' and nav_url:
-            result['navigation_links'].append({
-                'type': 'hyperlink',
-                'url':  nav_url.group(1),
+            url_val  = nav_url.group(1) or nav_url.group(2) or ''
+            route_m  = _ROUTE_URL.search(url_val)
+            nav_entry: Dict[str, Any] = {
+                'type': 'route' if route_m else 'hyperlink',
+                'url':  url_val,
                 'text': ctrl_info['text'],
-            })
+            }
+            if route_m:
+                nav_entry['route_name'] = route_m.group(1)
+            result['navigation_links'].append(nav_entry)
         elif ctype == 'content':
             pass  # handled below
         elif ctype in _NAV_CTRL_TYPES:
@@ -336,11 +386,31 @@ def parse_aspx_page(record: dict) -> dict:
     result['content_areas']        = _CONTENT_AREA.findall(content)
     result['content_placeholders'] = _CONTENT_PH.findall(content)
 
-    # HTML anchors
+    # NavigateUrl route expressions — full-content scan bypasses asp-tag > truncation
+    for rm in _NAVURL_ROUTE.finditer(content):
+        url_val = rm.group(1) or rm.group(2) or ''
+        rte_m = _ROUTE_URL.search(url_val)
+        if rte_m:
+            result['navigation_links'].append({
+                'type':       'route',
+                'url':        url_val,
+                'text':       '',
+                'route_name': rte_m.group(1),
+            })
+
+    # HTML anchors — also capture route expressions embedded in href values
     for href in _ANCHOR_HREF.findall(content):
         href = href.strip()
         if href and not href.startswith(('#', 'javascript:', 'mailto:')):
-            result['navigation_links'].append({'type': 'anchor', 'url': href, 'text': ''})
+            route_m = _ROUTE_URL.search(href)
+            entry: Dict[str, Any] = {
+                'type': 'route' if route_m else 'anchor',
+                'url':  href,
+                'text': '',
+            }
+            if route_m:
+                entry['route_name'] = route_m.group(1)
+            result['navigation_links'].append(entry)
 
     # ---- Code-behind ----
     if cb:
@@ -375,7 +445,8 @@ def parse_aspx_page(record: dict) -> dict:
         result['name'], result['folder'], result['imports']
     )
     result['purpose'] = _infer_page_purpose(
-        result['name'], result['folder'], ctrl_types, has_grid, has_form
+        result['name'], result['folder'], ctrl_types, has_grid, has_form,
+        result['imports']
     )
     result['auth'] = _infer_auth(result['name'], result['folder'], cb)
 

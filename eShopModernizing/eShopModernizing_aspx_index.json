@@ -1,0 +1,1510 @@
+{
+  "project": "eShopModernizing",
+  "repo_path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_validate_1834174696\\eShopModernizing",
+  "generated_at": "2026-06-18T10:19:50.674063Z",
+  "stats": {
+    "total_pages": 12,
+    "total_controls": 2,
+    "total_masters": 4,
+    "total_functional_areas": 3,
+    "total_named_routes": 5,
+    "pages_with_ajax": 0,
+    "pages_with_sql_direct": 0,
+    "pages_with_master": 12,
+    "pages_with_codebehind": 12,
+    "pages_with_validators": 4,
+    "pages_with_display_controls": 7,
+    "auth_breakdown": {
+      "anonymous": 4,
+      "authenticated": 3,
+      "unknown": 5
+    },
+    "functional_area_counts": {
+      "Contact": 2,
+      "Home": 2,
+      "Products": 8
+    }
+  },
+  "web_config": {},
+  "pages": [
+    {
+      "name": "About",
+      "filename": "About.aspx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_validate_1834174696\\eShopModernizing\\eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\About.aspx",
+      "rel_path": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\About.aspx",
+      "folder": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms",
+      "title": "About",
+      "master_page": "Site.Master",
+      "codebehind_file": "About.aspx.cs",
+      "inherits": "eShopLegacyWebForms.About",
+      "namespace": "eShopLegacyWebForms",
+      "class_name": "About",
+      "base_class": "Page",
+      "controls_registered": [],
+      "form_controls": [],
+      "display_controls": [],
+      "data_sources": [],
+      "content_areas": [
+        "MainContent"
+      ],
+      "content_placeholders": [],
+      "navigation_links": [],
+      "navigation_out": [],
+      "event_handlers": [
+        "Page_Load"
+      ],
+      "imports": [
+        "log4net",
+        "System",
+        "System.Web.UI"
+      ],
+      "uses_ajax": false,
+      "uses_sql_direct": false,
+      "has_login_controls": false,
+      "page_load": true,
+      "auth": "anonymous",
+      "functional_area": "Contact",
+      "purpose": "About page"
+    },
+    {
+      "name": "Contact",
+      "filename": "Contact.aspx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_validate_1834174696\\eShopModernizing\\eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Contact.aspx",
+      "rel_path": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Contact.aspx",
+      "folder": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms",
+      "title": "Contact",
+      "master_page": "Site.Master",
+      "codebehind_file": "Contact.aspx.cs",
+      "inherits": "eShopLegacyWebForms.Contact",
+      "namespace": "eShopLegacyWebForms",
+      "class_name": "Contact",
+      "base_class": "Page",
+      "controls_registered": [],
+      "form_controls": [],
+      "display_controls": [],
+      "data_sources": [],
+      "content_areas": [
+        "MainContent"
+      ],
+      "content_placeholders": [],
+      "navigation_links": [],
+      "navigation_out": [],
+      "event_handlers": [
+        "Page_Load"
+      ],
+      "imports": [
+        "log4net",
+        "System",
+        "System.Web.UI"
+      ],
+      "uses_ajax": false,
+      "uses_sql_direct": false,
+      "has_login_controls": false,
+      "page_load": true,
+      "auth": "anonymous",
+      "functional_area": "Contact",
+      "purpose": "Contact page"
+    },
+    {
+      "name": "Default",
+      "filename": "Default.aspx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_validate_1834174696\\eShopModernizing\\eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Default.aspx",
+      "rel_path": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Default.aspx",
+      "folder": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms",
+      "title": "Home Page",
+      "master_page": "Site.Master",
+      "codebehind_file": "Default.aspx.cs",
+      "inherits": "eShopLegacyWebForms._Default",
+      "namespace": "eShopLegacyWebForms",
+      "class_name": "_Default",
+      "base_class": "Page",
+      "controls_registered": [],
+      "form_controls": [
+        {
+          "type": "listview",
+          "id": "productList",
+          "text": ""
+        }
+      ],
+      "display_controls": [],
+      "data_sources": [],
+      "content_areas": [
+        "MainContent"
+      ],
+      "content_placeholders": [],
+      "navigation_links": [
+        {
+          "type": "route",
+          "url": "<%# GetRouteUrl(\"EditProductRoute\", new {id =Item.Id}) %>",
+          "text": "",
+          "route_name": "EditProductRoute"
+        },
+        {
+          "type": "route",
+          "url": "<%# GetRouteUrl(\"ProductDetailsRoute\", new {id =Item.Id}) %>",
+          "text": "",
+          "route_name": "ProductDetailsRoute"
+        },
+        {
+          "type": "route",
+          "url": "<%# GetRouteUrl(\"DeleteProductRoute\", new {id =Item.Id}) %>",
+          "text": "",
+          "route_name": "DeleteProductRoute"
+        },
+        {
+          "type": "route",
+          "url": "<%$RouteUrl:RouteName=CreateProductRoute%>",
+          "text": "",
+          "route_name": "CreateProductRoute"
+        }
+      ],
+      "navigation_out": [],
+      "event_handlers": [
+        "Page_Load"
+      ],
+      "imports": [
+        "eShopLegacyWebForms.Models",
+        "eShopLegacyWebForms.Services",
+        "eShopLegacyWebForms.ViewModel",
+        "System",
+        "System.Linq",
+        "System.Web.UI",
+        "log4net"
+      ],
+      "uses_ajax": false,
+      "uses_sql_direct": false,
+      "has_login_controls": false,
+      "page_load": true,
+      "auth": "anonymous",
+      "functional_area": "Home",
+      "purpose": "Application home page / dashboard"
+    },
+    {
+      "name": "Create",
+      "filename": "Create.aspx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_validate_1834174696\\eShopModernizing\\eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog\\Create.aspx",
+      "rel_path": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog\\Create.aspx",
+      "folder": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog",
+      "title": "Create",
+      "master_page": "Site.Master",
+      "codebehind_file": "Create.aspx.cs",
+      "inherits": "eShopLegacyWebForms.Catalog.Create",
+      "namespace": "eShopLegacyWebForms.Catalog",
+      "class_name": "Create",
+      "base_class": "System.Web.UI.Page",
+      "controls_registered": [],
+      "form_controls": [
+        {
+          "type": "textbox",
+          "id": "Name",
+          "text": ""
+        },
+        {
+          "type": "requiredfieldvalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Description",
+          "text": ""
+        },
+        {
+          "type": "dropdownlist",
+          "id": "Brand",
+          "text": ""
+        },
+        {
+          "type": "dropdownlist",
+          "id": "Type",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Price",
+          "text": ""
+        },
+        {
+          "type": "rangevalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Stock",
+          "text": ""
+        },
+        {
+          "type": "rangevalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Restock",
+          "text": ""
+        },
+        {
+          "type": "rangevalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Maxstock",
+          "text": ""
+        },
+        {
+          "type": "rangevalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "button",
+          "id": "",
+          "text": "[ Create ]"
+        }
+      ],
+      "display_controls": [],
+      "data_sources": [],
+      "content_areas": [
+        "MainContent"
+      ],
+      "content_placeholders": [],
+      "navigation_links": [
+        {
+          "type": "anchor",
+          "url": "~",
+          "text": ""
+        }
+      ],
+      "navigation_out": [
+        {
+          "type": "redirect",
+          "url": "~"
+        }
+      ],
+      "event_handlers": [
+        "Page_Load",
+        "Create_Click"
+      ],
+      "imports": [
+        "eShopLegacyWebForms.Models",
+        "eShopLegacyWebForms.Services",
+        "log4net",
+        "System",
+        "System.Collections.Generic"
+      ],
+      "uses_ajax": false,
+      "uses_sql_direct": false,
+      "has_login_controls": false,
+      "page_load": true,
+      "auth": "unknown",
+      "functional_area": "Products",
+      "purpose": "Create new Catalog"
+    },
+    {
+      "name": "Delete",
+      "filename": "Delete.aspx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_validate_1834174696\\eShopModernizing\\eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog\\Delete.aspx",
+      "rel_path": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog\\Delete.aspx",
+      "folder": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog",
+      "title": "Delete",
+      "master_page": "Site.Master",
+      "codebehind_file": "Delete.aspx.cs",
+      "inherits": "eShopLegacyWebForms.Catalog.Delete",
+      "namespace": "eShopLegacyWebForms.Catalog",
+      "class_name": "Delete",
+      "base_class": "System.Web.UI.Page",
+      "controls_registered": [],
+      "form_controls": [
+        {
+          "type": "button",
+          "id": "",
+          "text": "[ Delete ]"
+        }
+      ],
+      "display_controls": [
+        {
+          "type": "image",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        }
+      ],
+      "data_sources": [],
+      "content_areas": [
+        "MainContent"
+      ],
+      "content_placeholders": [],
+      "navigation_links": [
+        {
+          "type": "anchor",
+          "url": "~",
+          "text": ""
+        },
+        {
+          "type": "anchor",
+          "url": "~",
+          "text": ""
+        }
+      ],
+      "navigation_out": [
+        {
+          "type": "redirect",
+          "url": "~"
+        }
+      ],
+      "event_handlers": [
+        "Page_Load",
+        "Delete_Click"
+      ],
+      "imports": [
+        "eShopLegacyWebForms.Models",
+        "eShopLegacyWebForms.Services",
+        "log4net",
+        "System",
+        "System.Web.UI"
+      ],
+      "uses_ajax": false,
+      "uses_sql_direct": false,
+      "has_login_controls": false,
+      "page_load": true,
+      "auth": "unknown",
+      "functional_area": "Products",
+      "purpose": "Delete / remove confirmation — Catalog"
+    },
+    {
+      "name": "Details",
+      "filename": "Details.aspx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_validate_1834174696\\eShopModernizing\\eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog\\Details.aspx",
+      "rel_path": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog\\Details.aspx",
+      "folder": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog",
+      "title": "Details",
+      "master_page": "Site.Master",
+      "codebehind_file": "Details.aspx.cs",
+      "inherits": "eShopLegacyWebForms.Catalog.Details",
+      "namespace": "eShopLegacyWebForms.Catalog",
+      "class_name": "Details",
+      "base_class": "System.Web.UI.Page",
+      "controls_registered": [],
+      "form_controls": [],
+      "display_controls": [
+        {
+          "type": "image",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        }
+      ],
+      "data_sources": [],
+      "content_areas": [
+        "MainContent"
+      ],
+      "content_placeholders": [],
+      "navigation_links": [
+        {
+          "type": "anchor",
+          "url": "~",
+          "text": ""
+        }
+      ],
+      "navigation_out": [],
+      "event_handlers": [
+        "Page_Load"
+      ],
+      "imports": [
+        "eShopLegacyWebForms.Models",
+        "eShopLegacyWebForms.Services",
+        "log4net",
+        "System",
+        "System.Web.UI"
+      ],
+      "uses_ajax": false,
+      "uses_sql_direct": false,
+      "has_login_controls": false,
+      "page_load": true,
+      "auth": "unknown",
+      "functional_area": "Products",
+      "purpose": "Detail / read-only view — Catalog"
+    },
+    {
+      "name": "Edit",
+      "filename": "Edit.aspx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_validate_1834174696\\eShopModernizing\\eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog\\Edit.aspx",
+      "rel_path": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog\\Edit.aspx",
+      "folder": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog",
+      "title": "Edit",
+      "master_page": "Site.Master",
+      "codebehind_file": "Edit.aspx.cs",
+      "inherits": "eShopLegacyWebForms.Catalog.Edit",
+      "namespace": "eShopLegacyWebForms.Catalog",
+      "class_name": "Edit",
+      "base_class": "System.Web.UI.Page",
+      "controls_registered": [],
+      "form_controls": [
+        {
+          "type": "textbox",
+          "id": "Name",
+          "text": ""
+        },
+        {
+          "type": "requiredfieldvalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Description",
+          "text": ""
+        },
+        {
+          "type": "dropdownlist",
+          "id": "BrandDropDownList",
+          "text": ""
+        },
+        {
+          "type": "dropdownlist",
+          "id": "TypeDropDownList",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Price",
+          "text": ""
+        },
+        {
+          "type": "rangevalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "PictureFileName",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Stock",
+          "text": ""
+        },
+        {
+          "type": "rangevalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Restock",
+          "text": ""
+        },
+        {
+          "type": "rangevalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Maxstock",
+          "text": ""
+        },
+        {
+          "type": "rangevalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "button",
+          "id": "",
+          "text": "[ Save ]"
+        }
+      ],
+      "display_controls": [
+        {
+          "type": "image",
+          "id": "",
+          "text": ""
+        }
+      ],
+      "data_sources": [],
+      "content_areas": [
+        "MainContent"
+      ],
+      "content_placeholders": [],
+      "navigation_links": [
+        {
+          "type": "anchor",
+          "url": "~",
+          "text": ""
+        }
+      ],
+      "navigation_out": [
+        {
+          "type": "redirect",
+          "url": "~"
+        }
+      ],
+      "event_handlers": [
+        "Page_Load",
+        "Save_Click"
+      ],
+      "imports": [
+        "eShopLegacyWebForms.Models",
+        "eShopLegacyWebForms.Services",
+        "log4net",
+        "System",
+        "System.Collections.Generic",
+        "System.Web.UI"
+      ],
+      "uses_ajax": false,
+      "uses_sql_direct": false,
+      "has_login_controls": false,
+      "page_load": true,
+      "auth": "unknown",
+      "functional_area": "Products",
+      "purpose": "Edit / data entry form — Catalog"
+    },
+    {
+      "name": "Default",
+      "filename": "Default.aspx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_validate_1834174696\\eShopModernizing\\eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Default.aspx",
+      "rel_path": "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Default.aspx",
+      "folder": "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms",
+      "title": "Home Page",
+      "master_page": "Site.Master",
+      "codebehind_file": "Default.aspx.cs",
+      "inherits": "eShopModernizedWebForms._Default",
+      "namespace": "eShopModernizedWebForms",
+      "class_name": "_Default",
+      "base_class": "Page",
+      "controls_registered": [],
+      "form_controls": [
+        {
+          "type": "listview",
+          "id": "productList",
+          "text": ""
+        }
+      ],
+      "display_controls": [],
+      "data_sources": [],
+      "content_areas": [
+        "MainContent"
+      ],
+      "content_placeholders": [],
+      "navigation_links": [
+        {
+          "type": "route",
+          "url": "<%# GetRouteUrl(\"EditProductRoute\", new {id =Item.Id}) %>",
+          "text": "",
+          "route_name": "EditProductRoute"
+        },
+        {
+          "type": "route",
+          "url": "<%# GetRouteUrl(\"ProductDetailsRoute\", new {id =Item.Id}) %>",
+          "text": "",
+          "route_name": "ProductDetailsRoute"
+        },
+        {
+          "type": "route",
+          "url": "<%# GetRouteUrl(\"DeleteProductRoute\", new {id =Item.Id}) %>",
+          "text": "",
+          "route_name": "DeleteProductRoute"
+        },
+        {
+          "type": "route",
+          "url": "<%$RouteUrl:RouteName=CreateProductRoute%>",
+          "text": "",
+          "route_name": "CreateProductRoute"
+        }
+      ],
+      "navigation_out": [],
+      "event_handlers": [
+        "Page_Load"
+      ],
+      "imports": [
+        "eShopModernizedWebForms.Models",
+        "eShopModernizedWebForms.Services",
+        "eShopModernizedWebForms.ViewModel",
+        "System",
+        "System.Collections.Generic",
+        "System.Linq",
+        "System.Web.UI",
+        "log4net"
+      ],
+      "uses_ajax": false,
+      "uses_sql_direct": false,
+      "has_login_controls": false,
+      "page_load": true,
+      "auth": "anonymous",
+      "functional_area": "Home",
+      "purpose": "Application home page / dashboard"
+    },
+    {
+      "name": "Create",
+      "filename": "Create.aspx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_validate_1834174696\\eShopModernizing\\eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog\\Create.aspx",
+      "rel_path": "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog\\Create.aspx",
+      "folder": "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog",
+      "title": "Create",
+      "master_page": "Site.Master",
+      "codebehind_file": "Create.aspx.cs",
+      "inherits": "eShopModernizedWebForms.Catalog.Create",
+      "namespace": "eShopModernizedWebForms.Catalog",
+      "class_name": "Create",
+      "base_class": "System.Web.UI.Page",
+      "controls_registered": [],
+      "form_controls": [
+        {
+          "type": "hiddenfield",
+          "id": "TempImageName",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Name",
+          "text": ""
+        },
+        {
+          "type": "requiredfieldvalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Description",
+          "text": ""
+        },
+        {
+          "type": "dropdownlist",
+          "id": "Brand",
+          "text": ""
+        },
+        {
+          "type": "dropdownlist",
+          "id": "Type",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Price",
+          "text": ""
+        },
+        {
+          "type": "rangevalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Stock",
+          "text": ""
+        },
+        {
+          "type": "rangevalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Restock",
+          "text": ""
+        },
+        {
+          "type": "rangevalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Maxstock",
+          "text": ""
+        },
+        {
+          "type": "rangevalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "button",
+          "id": "",
+          "text": "[ Create ]"
+        }
+      ],
+      "display_controls": [
+        {
+          "type": "image",
+          "id": "",
+          "text": ""
+        }
+      ],
+      "data_sources": [],
+      "content_areas": [
+        "MainContent"
+      ],
+      "content_placeholders": [],
+      "navigation_links": [
+        {
+          "type": "anchor",
+          "url": "~",
+          "text": ""
+        }
+      ],
+      "navigation_out": [
+        {
+          "type": "redirect",
+          "url": "~"
+        }
+      ],
+      "event_handlers": [
+        "Page_Load",
+        "Create_Click"
+      ],
+      "imports": [
+        "eShopModernizedWebForms.Models",
+        "eShopModernizedWebForms.Services",
+        "log4net",
+        "Microsoft.Owin.Security",
+        "Microsoft.Owin.Security.OpenIdConnect",
+        "System",
+        "System.Collections.Generic",
+        "System.IO",
+        "System.Web"
+      ],
+      "uses_ajax": false,
+      "uses_sql_direct": false,
+      "has_login_controls": false,
+      "page_load": true,
+      "auth": "authenticated",
+      "functional_area": "Products",
+      "purpose": "Create new Catalog"
+    },
+    {
+      "name": "Delete",
+      "filename": "Delete.aspx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_validate_1834174696\\eShopModernizing\\eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog\\Delete.aspx",
+      "rel_path": "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog\\Delete.aspx",
+      "folder": "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog",
+      "title": "Delete",
+      "master_page": "Site.Master",
+      "codebehind_file": "Delete.aspx.cs",
+      "inherits": "eShopModernizedWebForms.Catalog.Delete",
+      "namespace": "eShopModernizedWebForms.Catalog",
+      "class_name": "Delete",
+      "base_class": "System.Web.UI.Page",
+      "controls_registered": [],
+      "form_controls": [
+        {
+          "type": "button",
+          "id": "",
+          "text": "[ Delete ]"
+        }
+      ],
+      "display_controls": [
+        {
+          "type": "image",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        }
+      ],
+      "data_sources": [],
+      "content_areas": [
+        "MainContent"
+      ],
+      "content_placeholders": [],
+      "navigation_links": [
+        {
+          "type": "anchor",
+          "url": "~",
+          "text": ""
+        }
+      ],
+      "navigation_out": [
+        {
+          "type": "redirect",
+          "url": "~"
+        }
+      ],
+      "event_handlers": [
+        "Page_Load",
+        "Delete_Click"
+      ],
+      "imports": [
+        "eShopModernizedWebForms.Models",
+        "eShopModernizedWebForms.Services",
+        "log4net",
+        "Microsoft.Owin.Security",
+        "Microsoft.Owin.Security.OpenIdConnect",
+        "System",
+        "System.Web",
+        "System.Web.UI"
+      ],
+      "uses_ajax": false,
+      "uses_sql_direct": false,
+      "has_login_controls": false,
+      "page_load": true,
+      "auth": "authenticated",
+      "functional_area": "Products",
+      "purpose": "Delete / remove confirmation — Catalog"
+    },
+    {
+      "name": "Details",
+      "filename": "Details.aspx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_validate_1834174696\\eShopModernizing\\eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog\\Details.aspx",
+      "rel_path": "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog\\Details.aspx",
+      "folder": "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog",
+      "title": "Details",
+      "master_page": "Site.Master",
+      "codebehind_file": "Details.aspx.cs",
+      "inherits": "eShopModernizedWebForms.Catalog.Details",
+      "namespace": "eShopModernizedWebForms.Catalog",
+      "class_name": "Details",
+      "base_class": "System.Web.UI.Page",
+      "controls_registered": [],
+      "form_controls": [],
+      "display_controls": [
+        {
+          "type": "image",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "label",
+          "id": "",
+          "text": ""
+        }
+      ],
+      "data_sources": [],
+      "content_areas": [
+        "MainContent"
+      ],
+      "content_placeholders": [],
+      "navigation_links": [
+        {
+          "type": "anchor",
+          "url": "~",
+          "text": ""
+        }
+      ],
+      "navigation_out": [],
+      "event_handlers": [
+        "Page_Load"
+      ],
+      "imports": [
+        "eShopModernizedWebForms.Models",
+        "eShopModernizedWebForms.Services",
+        "log4net",
+        "System",
+        "System.Web.UI"
+      ],
+      "uses_ajax": false,
+      "uses_sql_direct": false,
+      "has_login_controls": false,
+      "page_load": true,
+      "auth": "unknown",
+      "functional_area": "Products",
+      "purpose": "Detail / read-only view — Catalog"
+    },
+    {
+      "name": "Edit",
+      "filename": "Edit.aspx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_validate_1834174696\\eShopModernizing\\eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog\\Edit.aspx",
+      "rel_path": "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog\\Edit.aspx",
+      "folder": "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog",
+      "title": "Edit",
+      "master_page": "Site.Master",
+      "codebehind_file": "Edit.aspx.cs",
+      "inherits": "eShopModernizedWebForms.Catalog.Edit",
+      "namespace": "eShopModernizedWebForms.Catalog",
+      "class_name": "Edit",
+      "base_class": "System.Web.UI.Page",
+      "controls_registered": [],
+      "form_controls": [
+        {
+          "type": "hiddenfield",
+          "id": "TempImageName",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Name",
+          "text": ""
+        },
+        {
+          "type": "requiredfieldvalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Description",
+          "text": ""
+        },
+        {
+          "type": "dropdownlist",
+          "id": "BrandDropDownList",
+          "text": ""
+        },
+        {
+          "type": "dropdownlist",
+          "id": "TypeDropDownList",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Price",
+          "text": ""
+        },
+        {
+          "type": "rangevalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "PictureFileName",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Stock",
+          "text": ""
+        },
+        {
+          "type": "rangevalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Restock",
+          "text": ""
+        },
+        {
+          "type": "rangevalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "Maxstock",
+          "text": ""
+        },
+        {
+          "type": "rangevalidator",
+          "id": "",
+          "text": ""
+        },
+        {
+          "type": "button",
+          "id": "",
+          "text": "[ Save ]"
+        }
+      ],
+      "display_controls": [
+        {
+          "type": "image",
+          "id": "",
+          "text": ""
+        }
+      ],
+      "data_sources": [],
+      "content_areas": [
+        "MainContent"
+      ],
+      "content_placeholders": [],
+      "navigation_links": [
+        {
+          "type": "anchor",
+          "url": "~",
+          "text": ""
+        }
+      ],
+      "navigation_out": [
+        {
+          "type": "redirect",
+          "url": "~"
+        }
+      ],
+      "event_handlers": [
+        "Page_Load",
+        "Save_Click"
+      ],
+      "imports": [
+        "eShopModernizedWebForms.Models",
+        "eShopModernizedWebForms.Services",
+        "log4net",
+        "Microsoft.Owin.Security",
+        "Microsoft.Owin.Security.OpenIdConnect",
+        "System",
+        "System.Collections.Generic",
+        "System.IO",
+        "System.Web",
+        "System.Web.UI"
+      ],
+      "uses_ajax": false,
+      "uses_sql_direct": false,
+      "has_login_controls": false,
+      "page_load": true,
+      "auth": "authenticated",
+      "functional_area": "Products",
+      "purpose": "Edit / data entry form — Catalog"
+    }
+  ],
+  "user_controls": [
+    {
+      "name": "ViewSwitcher",
+      "filename": "ViewSwitcher.ascx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_validate_1834174696\\eShopModernizing\\eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\ViewSwitcher.ascx",
+      "rel_path": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\ViewSwitcher.ascx",
+      "folder": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms",
+      "inherits": "eShopLegacyWebForms.ViewSwitcher",
+      "class_name": "ViewSwitcher",
+      "namespace": "eShopLegacyWebForms",
+      "form_controls": [],
+      "event_handlers": [
+        "Page_Load"
+      ],
+      "properties": [],
+      "used_by_pages": [],
+      "purpose": "ViewSwitcher reusable UI component"
+    },
+    {
+      "name": "ViewSwitcher",
+      "filename": "ViewSwitcher.ascx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_validate_1834174696\\eShopModernizing\\eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\ViewSwitcher.ascx",
+      "rel_path": "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\ViewSwitcher.ascx",
+      "folder": "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms",
+      "inherits": "eShopModernizedWebForms.ViewSwitcher",
+      "class_name": "ViewSwitcher",
+      "namespace": "eShopModernizedWebForms",
+      "form_controls": [],
+      "event_handlers": [
+        "Page_Load"
+      ],
+      "properties": [],
+      "used_by_pages": [],
+      "purpose": "ViewSwitcher reusable UI component"
+    }
+  ],
+  "master_pages": [
+    {
+      "name": "Site",
+      "filename": "Site.Master",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_validate_1834174696\\eShopModernizing\\eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Site.Master",
+      "rel_path": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Site.Master",
+      "class_name": "SiteMaster",
+      "namespace": "eShopLegacyWebForms",
+      "content_placeholders": [
+        "MainContent"
+      ],
+      "controls_registered": [],
+      "used_by_pages": [
+        "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\About.aspx",
+        "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Contact.aspx",
+        "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Default.aspx",
+        "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog\\Create.aspx",
+        "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog\\Delete.aspx",
+        "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog\\Details.aspx",
+        "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog\\Edit.aspx"
+      ],
+      "navigation_menus": [],
+      "has_login_controls": false,
+      "uses_ajax": true,
+      "purpose": "Layout master template"
+    },
+    {
+      "name": "Site.Mobile",
+      "filename": "Site.Mobile.Master",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_validate_1834174696\\eShopModernizing\\eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Site.Mobile.Master",
+      "rel_path": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Site.Mobile.Master",
+      "class_name": "Site_Mobile",
+      "namespace": "eShopLegacyWebForms",
+      "content_placeholders": [
+        "HeadContent",
+        "FeaturedContent",
+        "MainContent"
+      ],
+      "controls_registered": [
+        {
+          "src": "ViewSwitcher.ascx",
+          "prefix": "friendlyUrls"
+        }
+      ],
+      "used_by_pages": [],
+      "navigation_menus": [],
+      "has_login_controls": false,
+      "uses_ajax": false,
+      "purpose": "Mobile layout template"
+    },
+    {
+      "name": "Site",
+      "filename": "Site.Master",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_validate_1834174696\\eShopModernizing\\eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Site.Master",
+      "rel_path": "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Site.Master",
+      "class_name": "SiteMaster",
+      "namespace": "eShopModernizedWebForms",
+      "content_placeholders": [
+        "MainContent"
+      ],
+      "controls_registered": [],
+      "used_by_pages": [
+        "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Default.aspx",
+        "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog\\Create.aspx",
+        "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog\\Delete.aspx",
+        "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog\\Details.aspx",
+        "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog\\Edit.aspx"
+      ],
+      "navigation_menus": [],
+      "has_login_controls": true,
+      "uses_ajax": true,
+      "purpose": "Layout master template"
+    },
+    {
+      "name": "Site.Mobile",
+      "filename": "Site.Mobile.Master",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_validate_1834174696\\eShopModernizing\\eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Site.Mobile.Master",
+      "rel_path": "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Site.Mobile.Master",
+      "class_name": "Site_Mobile",
+      "namespace": "eShopModernizedWebForms",
+      "content_placeholders": [
+        "HeadContent",
+        "FeaturedContent",
+        "MainContent"
+      ],
+      "controls_registered": [
+        {
+          "src": "ViewSwitcher.ascx",
+          "prefix": "friendlyUrls"
+        }
+      ],
+      "used_by_pages": [],
+      "navigation_menus": [],
+      "has_login_controls": false,
+      "uses_ajax": false,
+      "purpose": "Mobile layout template"
+    }
+  ],
+  "functional_areas": {
+    "Contact": [
+      {
+        "name": "About",
+        "rel_path": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\About.aspx",
+        "purpose": "About page",
+        "auth": "anonymous"
+      },
+      {
+        "name": "Contact",
+        "rel_path": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Contact.aspx",
+        "purpose": "Contact page",
+        "auth": "anonymous"
+      }
+    ],
+    "Home": [
+      {
+        "name": "Default",
+        "rel_path": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Default.aspx",
+        "purpose": "Application home page / dashboard",
+        "auth": "anonymous"
+      },
+      {
+        "name": "Default",
+        "rel_path": "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Default.aspx",
+        "purpose": "Application home page / dashboard",
+        "auth": "anonymous"
+      }
+    ],
+    "Products": [
+      {
+        "name": "Create",
+        "rel_path": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog\\Create.aspx",
+        "purpose": "Create new Catalog",
+        "auth": "unknown"
+      },
+      {
+        "name": "Delete",
+        "rel_path": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog\\Delete.aspx",
+        "purpose": "Delete / remove confirmation — Catalog",
+        "auth": "unknown"
+      },
+      {
+        "name": "Details",
+        "rel_path": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog\\Details.aspx",
+        "purpose": "Detail / read-only view — Catalog",
+        "auth": "unknown"
+      },
+      {
+        "name": "Edit",
+        "rel_path": "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Catalog\\Edit.aspx",
+        "purpose": "Edit / data entry form — Catalog",
+        "auth": "unknown"
+      },
+      {
+        "name": "Create",
+        "rel_path": "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog\\Create.aspx",
+        "purpose": "Create new Catalog",
+        "auth": "authenticated"
+      },
+      {
+        "name": "Delete",
+        "rel_path": "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog\\Delete.aspx",
+        "purpose": "Delete / remove confirmation — Catalog",
+        "auth": "authenticated"
+      },
+      {
+        "name": "Details",
+        "rel_path": "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog\\Details.aspx",
+        "purpose": "Detail / read-only view — Catalog",
+        "auth": "unknown"
+      },
+      {
+        "name": "Edit",
+        "rel_path": "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Catalog\\Edit.aspx",
+        "purpose": "Edit / data entry form — Catalog",
+        "auth": "authenticated"
+      }
+    ]
+  },
+  "navigation_map": {
+    "eShopLegacyWebFormsSolution/src/eShopLegacyWebForms/Default.aspx": [
+      "eShopLegacyWebFormsSolution/src/eShopLegacyWebForms/Catalog/Edit.aspx",
+      "eShopLegacyWebFormsSolution/src/eShopLegacyWebForms/Catalog/Details.aspx",
+      "eShopLegacyWebFormsSolution/src/eShopLegacyWebForms/Catalog/Delete.aspx",
+      "eShopLegacyWebFormsSolution/src/eShopLegacyWebForms/Catalog/Create.aspx"
+    ],
+    "eShopModernizedWebFormsSolution/src/eShopModernizedWebForms/Default.aspx": [
+      "eShopLegacyWebFormsSolution/src/eShopLegacyWebForms/Catalog/Edit.aspx",
+      "eShopLegacyWebFormsSolution/src/eShopLegacyWebForms/Catalog/Details.aspx",
+      "eShopLegacyWebFormsSolution/src/eShopLegacyWebForms/Catalog/Delete.aspx",
+      "eShopLegacyWebFormsSolution/src/eShopLegacyWebForms/Catalog/Create.aspx"
+    ]
+  },
+  "component_map": {
+    "master_pages": {
+      "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Site.Master": {
+        "name": "Site",
+        "pages_count": 7,
+        "placeholders": [
+          "MainContent"
+        ],
+        "has_login": false,
+        "navigation_menus": []
+      },
+      "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\Site.Mobile.Master": {
+        "name": "Site.Mobile",
+        "pages_count": 0,
+        "placeholders": [
+          "HeadContent",
+          "FeaturedContent",
+          "MainContent"
+        ],
+        "has_login": false,
+        "navigation_menus": []
+      },
+      "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Site.Master": {
+        "name": "Site",
+        "pages_count": 5,
+        "placeholders": [
+          "MainContent"
+        ],
+        "has_login": true,
+        "navigation_menus": []
+      },
+      "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\Site.Mobile.Master": {
+        "name": "Site.Mobile",
+        "pages_count": 0,
+        "placeholders": [
+          "HeadContent",
+          "FeaturedContent",
+          "MainContent"
+        ],
+        "has_login": false,
+        "navigation_menus": []
+      }
+    },
+    "user_controls": {
+      "eShopLegacyWebFormsSolution\\src\\eShopLegacyWebForms\\ViewSwitcher.ascx": {
+        "name": "ViewSwitcher",
+        "pages_count": 0,
+        "purpose": "ViewSwitcher reusable UI component"
+      },
+      "eShopModernizedWebFormsSolution\\src\\eShopModernizedWebForms\\ViewSwitcher.ascx": {
+        "name": "ViewSwitcher",
+        "pages_count": 0,
+        "purpose": "ViewSwitcher reusable UI component"
+      }
+    }
+  }
+}

@@ -21,7 +21,8 @@ SKIP_DIRS = {
     '.gradle', 'target', 'out', 'wwwroot',
 }
 
-CONFIG_NAMES = {'web.config', 'global.asax', 'global.asax.cs', 'app_code'}
+CONFIG_NAMES        = {'web.config', 'global.asax', 'global.asax.cs', 'app_code'}
+ROUTE_CONFIG_NAMES  = {'routeconfig.cs'}
 
 
 def _should_skip(dir_name: str) -> bool:
@@ -30,7 +31,9 @@ def _should_skip(dir_name: str) -> bool:
 
 def _read_file(path: str) -> str:
     try:
-        return Path(path).read_text(encoding='utf-8', errors='replace')
+        # utf-8-sig strips BOM (﻿) present in many Visual Studio .cs/.aspx files
+        # so the first ^using/^namespace regex anchors match correctly
+        return Path(path).read_text(encoding='utf-8-sig', errors='replace')
     except Exception:
         return ''
 
@@ -43,7 +46,7 @@ def discover_paths(repo_path: str, max_pages: int = 5000) -> Dict[str, List[dict
         dict with keys: pages, controls, masters, configs, cs_files
         Each value is a list of path dicts: {path, name, filename, rel_path}
     """
-    result = {'pages': [], 'controls': [], 'masters': [], 'configs': [], 'cs_files': []}
+    result = {'pages': [], 'controls': [], 'masters': [], 'configs': [], 'cs_files': [], 'routes': []}
     repo = Path(repo_path)
     page_count = 0
 
@@ -68,6 +71,8 @@ def discover_paths(repo_path: str, max_pages: int = 5000) -> Dict[str, List[dict
 
             if fname_lower in CONFIG_NAMES or fname_lower == 'web.config':
                 result['configs'].append(rec)
+            elif fname_lower in ROUTE_CONFIG_NAMES:
+                result['routes'].append(rec)
             elif fname_lower.endswith('.aspx') and not fname_lower.endswith('.aspx.cs'):
                 if page_count < max_pages:
                     result['pages'].append(rec)
@@ -124,7 +129,8 @@ def load_aspx_repo(repo_path: str, max_pages: int = 5000) -> Dict[str, list]:
     cb_map = build_codebehind_map(paths)
 
     print(f"  Found: {len(paths['pages'])} .aspx | {len(paths['controls'])} .ascx | "
-          f"{len(paths['masters'])} .master | {len(paths['cs_files'])} .cs")
+          f"{len(paths['masters'])} .master | {len(paths['cs_files'])} .cs | "
+          f"{len(paths.get('routes', []))} route config(s)")
 
     def _enrich(rec: dict) -> dict:
         content = _read_file(rec['path'])
@@ -149,4 +155,9 @@ def load_aspx_repo(repo_path: str, max_pages: int = 5000) -> Dict[str, list]:
         content = _read_file(rec['path'])
         configs.append({**rec, 'content': content})
 
-    return {'pages': pages, 'controls': controls, 'masters': masters, 'configs': configs}
+    # Route config files (RouteConfig.cs)
+    routes = []
+    for rec in paths.get('routes', []):
+        routes.append({**rec, 'content': _read_file(rec['path'])})
+
+    return {'pages': pages, 'controls': controls, 'masters': masters, 'configs': configs, 'routes': routes}
