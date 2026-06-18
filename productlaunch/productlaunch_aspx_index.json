@@ -1,0 +1,421 @@
+{
+  "project": "productlaunch",
+  "repo_path": "C:\\Users\\SARVES~1\\AppData\\Local\\Temp\\aspx_skill_54z87s2k\\productlaunch",
+  "generated_at": "2026-06-18T09:13:10.107049Z",
+  "stats": {
+    "total_pages": 5,
+    "total_controls": 1,
+    "total_masters": 2,
+    "total_functional_areas": 2,
+    "pages_with_ajax": 0,
+    "pages_with_sql_direct": 0,
+    "pages_with_master": 5,
+    "pages_with_codebehind": 5,
+    "auth_breakdown": {
+      "anonymous": 4,
+      "unknown": 1
+    },
+    "functional_area_counts": {
+      "Authentication": 1,
+      "Products": 4
+    }
+  },
+  "web_config": {},
+  "pages": [
+    {
+      "name": "About",
+      "filename": "About.aspx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_skill_54z87s2k\\productlaunch\\ProductLaunch.Web\\About.aspx",
+      "rel_path": "ProductLaunch.Web\\About.aspx",
+      "folder": "ProductLaunch.Web",
+      "title": "About",
+      "master_page": "Site.Master",
+      "codebehind_file": "About.aspx.cs",
+      "inherits": "ProductLaunch.Web.About",
+      "namespace": "ProductLaunch.Web",
+      "class_name": "About",
+      "base_class": "Page",
+      "controls_registered": [],
+      "form_controls": [],
+      "data_sources": [],
+      "content_areas": [
+        "MainContent"
+      ],
+      "content_placeholders": [],
+      "navigation_links": [],
+      "navigation_out": [],
+      "event_handlers": [
+        "Page_Load"
+      ],
+      "imports": [
+        "System.Collections.Generic",
+        "System.Linq",
+        "System.Web",
+        "System.Web.UI",
+        "System.Web.UI.WebControls"
+      ],
+      "uses_ajax": false,
+      "uses_sql_direct": false,
+      "has_login_controls": false,
+      "page_load": true,
+      "auth": "anonymous",
+      "functional_area": "Products",
+      "purpose": "About page"
+    },
+    {
+      "name": "Contact",
+      "filename": "Contact.aspx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_skill_54z87s2k\\productlaunch\\ProductLaunch.Web\\Contact.aspx",
+      "rel_path": "ProductLaunch.Web\\Contact.aspx",
+      "folder": "ProductLaunch.Web",
+      "title": "Contact",
+      "master_page": "Site.Master",
+      "codebehind_file": "Contact.aspx.cs",
+      "inherits": "ProductLaunch.Web.Contact",
+      "namespace": "ProductLaunch.Web",
+      "class_name": "Contact",
+      "base_class": "Page",
+      "controls_registered": [],
+      "form_controls": [],
+      "data_sources": [],
+      "content_areas": [
+        "MainContent"
+      ],
+      "content_placeholders": [],
+      "navigation_links": [],
+      "navigation_out": [],
+      "event_handlers": [
+        "Page_Load"
+      ],
+      "imports": [
+        "System.Collections.Generic",
+        "System.Linq",
+        "System.Web",
+        "System.Web.UI",
+        "System.Web.UI.WebControls"
+      ],
+      "uses_ajax": false,
+      "uses_sql_direct": false,
+      "has_login_controls": false,
+      "page_load": true,
+      "auth": "anonymous",
+      "functional_area": "Products",
+      "purpose": "Contact page"
+    },
+    {
+      "name": "Default",
+      "filename": "Default.aspx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_skill_54z87s2k\\productlaunch\\ProductLaunch.Web\\Default.aspx",
+      "rel_path": "ProductLaunch.Web\\Default.aspx",
+      "folder": "ProductLaunch.Web",
+      "title": "Home Page",
+      "master_page": "Site.Master",
+      "codebehind_file": "Default.aspx.cs",
+      "inherits": "ProductLaunch.Web._Default",
+      "namespace": "ProductLaunch.Web",
+      "class_name": "_Default",
+      "base_class": "Page",
+      "controls_registered": [],
+      "form_controls": [],
+      "data_sources": [],
+      "content_areas": [
+        "MainContent"
+      ],
+      "content_placeholders": [],
+      "navigation_links": [
+        {
+          "type": "anchor",
+          "url": "https://www.schoolofdevops.com",
+          "text": ""
+        },
+        {
+          "type": "anchor",
+          "url": "SignUp.aspx",
+          "text": ""
+        }
+      ],
+      "navigation_out": [],
+      "event_handlers": [
+        "Page_Load"
+      ],
+      "imports": [
+        "System.IO",
+        "System.Net",
+        "System.Web.UI"
+      ],
+      "uses_ajax": false,
+      "uses_sql_direct": false,
+      "has_login_controls": false,
+      "page_load": true,
+      "auth": "anonymous",
+      "functional_area": "Products",
+      "purpose": "Application home page / dashboard"
+    },
+    {
+      "name": "SignUp",
+      "filename": "SignUp.aspx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_skill_54z87s2k\\productlaunch\\ProductLaunch.Web\\SignUp.aspx",
+      "rel_path": "ProductLaunch.Web\\SignUp.aspx",
+      "folder": "ProductLaunch.Web",
+      "title": "Sign Up",
+      "master_page": "Site.Master",
+      "codebehind_file": "SignUp.aspx.cs",
+      "inherits": "ProductLaunch.Web.SignUp",
+      "namespace": "ProductLaunch.Web",
+      "class_name": "SignUp",
+      "base_class": "Page",
+      "controls_registered": [],
+      "form_controls": [
+        {
+          "type": "textbox",
+          "id": "txtFirstName",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "txtLastName",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "txtEmail",
+          "text": ""
+        },
+        {
+          "type": "dropdownlist",
+          "id": "ddlCountry",
+          "text": ""
+        },
+        {
+          "type": "textbox",
+          "id": "txtCompanyName",
+          "text": ""
+        },
+        {
+          "type": "dropdownlist",
+          "id": "ddlRole",
+          "text": ""
+        },
+        {
+          "type": "button",
+          "id": "btnGo",
+          "text": "Go!"
+        }
+      ],
+      "data_sources": [],
+      "content_areas": [
+        "MainContent"
+      ],
+      "content_placeholders": [],
+      "navigation_links": [],
+      "navigation_out": [
+        {
+          "type": "transfer",
+          "url": "ThankYou.aspx"
+        }
+      ],
+      "event_handlers": [
+        "Page_Load",
+        "btnGo_Click"
+      ],
+      "imports": [
+        "ProductLaunch.Model",
+        "System",
+        "System.Collections.Generic",
+        "System.Linq",
+        "System.Web.UI",
+        "System.Web.UI.WebControls"
+      ],
+      "uses_ajax": false,
+      "uses_sql_direct": false,
+      "has_login_controls": false,
+      "page_load": true,
+      "auth": "anonymous",
+      "functional_area": "Authentication",
+      "purpose": "New user registration"
+    },
+    {
+      "name": "ThankYou",
+      "filename": "ThankYou.aspx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_skill_54z87s2k\\productlaunch\\ProductLaunch.Web\\ThankYou.aspx",
+      "rel_path": "ProductLaunch.Web\\ThankYou.aspx",
+      "folder": "ProductLaunch.Web",
+      "title": "Ta",
+      "master_page": "Site.Master",
+      "codebehind_file": "ThankYou.aspx.cs",
+      "inherits": "ProductLaunch.Web.ThankYou",
+      "namespace": "ProductLaunch.Web",
+      "class_name": "ThankYou",
+      "base_class": "System.Web.UI.Page",
+      "controls_registered": [],
+      "form_controls": [],
+      "data_sources": [],
+      "content_areas": [
+        "MainContent"
+      ],
+      "content_placeholders": [],
+      "navigation_links": [],
+      "navigation_out": [],
+      "event_handlers": [
+        "Page_Load"
+      ],
+      "imports": [
+        "System.Collections.Generic",
+        "System.Linq",
+        "System.Web",
+        "System.Web.UI",
+        "System.Web.UI.WebControls"
+      ],
+      "uses_ajax": false,
+      "uses_sql_direct": false,
+      "has_login_controls": false,
+      "page_load": true,
+      "auth": "unknown",
+      "functional_area": "Products",
+      "purpose": "ThankYou page"
+    }
+  ],
+  "user_controls": [
+    {
+      "name": "ViewSwitcher",
+      "filename": "ViewSwitcher.ascx",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_skill_54z87s2k\\productlaunch\\ProductLaunch.Web\\ViewSwitcher.ascx",
+      "rel_path": "ProductLaunch.Web\\ViewSwitcher.ascx",
+      "folder": "ProductLaunch.Web",
+      "inherits": "ProductLaunch.Web.ViewSwitcher",
+      "class_name": "ViewSwitcher",
+      "namespace": "ProductLaunch.Web",
+      "form_controls": [],
+      "event_handlers": [
+        "Page_Load"
+      ],
+      "properties": [],
+      "used_by_pages": [],
+      "purpose": "ViewSwitcher reusable UI component"
+    }
+  ],
+  "master_pages": [
+    {
+      "name": "Site",
+      "filename": "Site.Master",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_skill_54z87s2k\\productlaunch\\ProductLaunch.Web\\Site.Master",
+      "rel_path": "ProductLaunch.Web\\Site.Master",
+      "class_name": "SiteMaster",
+      "namespace": "ProductLaunch.Web",
+      "content_placeholders": [
+        "MainContent"
+      ],
+      "controls_registered": [],
+      "used_by_pages": [
+        "ProductLaunch.Web\\About.aspx",
+        "ProductLaunch.Web\\Contact.aspx",
+        "ProductLaunch.Web\\Default.aspx",
+        "ProductLaunch.Web\\SignUp.aspx",
+        "ProductLaunch.Web\\ThankYou.aspx"
+      ],
+      "navigation_menus": [],
+      "has_login_controls": false,
+      "uses_ajax": true,
+      "purpose": "Layout master template"
+    },
+    {
+      "name": "Site.Mobile",
+      "filename": "Site.Mobile.Master",
+      "path": "C:\\Users\\SarveshTalele\\AppData\\Local\\Temp\\aspx_skill_54z87s2k\\productlaunch\\ProductLaunch.Web\\Site.Mobile.Master",
+      "rel_path": "ProductLaunch.Web\\Site.Mobile.Master",
+      "class_name": "Site_Mobile",
+      "namespace": "ProductLaunch.Web",
+      "content_placeholders": [
+        "HeadContent",
+        "FeaturedContent",
+        "MainContent"
+      ],
+      "controls_registered": [
+        {
+          "src": "ViewSwitcher.ascx",
+          "prefix": "friendlyUrls"
+        }
+      ],
+      "used_by_pages": [],
+      "navigation_menus": [],
+      "has_login_controls": false,
+      "uses_ajax": false,
+      "purpose": "Mobile layout template"
+    }
+  ],
+  "functional_areas": {
+    "Authentication": [
+      {
+        "name": "SignUp",
+        "rel_path": "ProductLaunch.Web\\SignUp.aspx",
+        "purpose": "New user registration",
+        "auth": "anonymous"
+      }
+    ],
+    "Products": [
+      {
+        "name": "About",
+        "rel_path": "ProductLaunch.Web\\About.aspx",
+        "purpose": "About page",
+        "auth": "anonymous"
+      },
+      {
+        "name": "Contact",
+        "rel_path": "ProductLaunch.Web\\Contact.aspx",
+        "purpose": "Contact page",
+        "auth": "anonymous"
+      },
+      {
+        "name": "Default",
+        "rel_path": "ProductLaunch.Web\\Default.aspx",
+        "purpose": "Application home page / dashboard",
+        "auth": "anonymous"
+      },
+      {
+        "name": "ThankYou",
+        "rel_path": "ProductLaunch.Web\\ThankYou.aspx",
+        "purpose": "ThankYou page",
+        "auth": "unknown"
+      }
+    ]
+  },
+  "navigation_map": {
+    "ProductLaunch.Web/Default.aspx": [
+      "SignUp.aspx"
+    ],
+    "ProductLaunch.Web/SignUp.aspx": [
+      "ThankYou.aspx"
+    ]
+  },
+  "component_map": {
+    "master_pages": {
+      "ProductLaunch.Web\\Site.Master": {
+        "name": "Site",
+        "pages_count": 5,
+        "placeholders": [
+          "MainContent"
+        ],
+        "has_login": false,
+        "navigation_menus": []
+      },
+      "ProductLaunch.Web\\Site.Mobile.Master": {
+        "name": "Site.Mobile",
+        "pages_count": 0,
+        "placeholders": [
+          "HeadContent",
+          "FeaturedContent",
+          "MainContent"
+        ],
+        "has_login": false,
+        "navigation_menus": []
+      }
+    },
+    "user_controls": {
+      "ProductLaunch.Web\\ViewSwitcher.ascx": {
+        "name": "ViewSwitcher",
+        "pages_count": 0,
+        "purpose": "ViewSwitcher reusable UI component"
+      }
+    }
+  }
+}
