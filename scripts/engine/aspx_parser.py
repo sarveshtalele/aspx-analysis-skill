@@ -626,8 +626,9 @@ def parse_web_config(record: dict) -> dict:
     if m:
         result['session_mode'] = m.group(1)
 
-    # SMTP
-    m = re.search(r'<smtp\b[^>]*host\s*=\s*"([^"]+)"', content, re.IGNORECASE)
+    # SMTP — host may sit on <smtp> or on the nested <network> element
+    m = (re.search(r'<smtp\b[^>]*host\s*=\s*"([^"]+)"', content, re.IGNORECASE)
+         or re.search(r'<network\b[^>]*host\s*=\s*"([^"]+)"', content, re.IGNORECASE))
     if m:
         result['smtp_host'] = m.group(1)
 

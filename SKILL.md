@@ -8,6 +8,9 @@ description: >
   user controls and master pages with usage maps; (5) Navigation Map — page-to-page transition graph.
   Supports GitHub repo URLs AND local/current repo paths. Builds a JSON index once; subsequent
   queries served from cache — handles 1000+ ASPX pages efficiently.
+  For HUGE repos (10,000+ files) use the streaming single-file business analyzer
+  (aspx_business_analyzer.py) — memory-safe, multiprocess, emits ONE consolidated
+  business-logic markdown file instead of 5.
   Trigger when user says: analyze aspx, aspx pages, web forms analysis, page inventory,
   aspx architecture, what pages does this app have, show me the screen flow, show user controls,
   master page analysis, aspx functional view, reverse engineer aspx, analyze this aspx project,
@@ -35,6 +38,57 @@ The analysis produces **5 views** from a single persistent JSON index:
 3. **Functional View** — pages grouped by business domain
 4. **Component View** — user controls + master pages catalog
 5. **Navigation Map** — page transition graph
+
+---
+
+## ⚡ Large-Repo Fast Mode (10,000+ files) — USE THIS FIRST for big/legacy apps
+
+The original 5-view path reads every file into memory, prints the whole report to
+stdout, and writes 5 MD files + a large JSON. On 10,000+ file repos that exhausts
+memory and **PowerShell / the terminal gets terminated**, and the AI then chokes
+reading 5 big files.
+
+For big repos run the **streaming single-file business analyzer** instead. It:
+- **Streams** files one at a time (read → parse → keep compact dict → discard raw
+  text). Peak memory stays flat regardless of repo size.
+- Runs the parse across **multiple processes** (`--workers`).
+- **Skips** generated/`.designer.cs`/minified files and caps per-file bytes.
+- Prints only a **short summary** to stdout (no flood → no hang).
+- Emits **ONE** `{repo}_BusinessAnalysis.md` (business impact + website-flow view +
+  per-method business logic in the client format) plus one compact JSON index.
+
+### Run it
+
+```bash
+# Whole project — one consolidated business file
+python scripts/aspx_business_analyzer.py . --workers 8
+
+# GitHub repo
+python scripts/aspx_business_analyzer.py https://github.com/org/App --workers 8
+
+# Deep per-method detail for ONE capability (keeps output focused)
+python scripts/aspx_business_analyzer.py . --detail-area Orders --full-detail
+```
+
+Key options: `--workers N` (parallel; default = CPU count, cap 8; `1` = serial),
+`--max-bytes N` (skip code-behind larger than N), `--max-pages N` (cap pages),
+`--detail-area A` / `--full-detail` (per-method detail scope), `--max-files N`
+(detailed-logic page cap, default 40), `--rebuild`, `--output DIR`.
+
+### Consolidated report sections (matches the client spec)
+1. Executive Business Summary & **Business Impact**
+2. Application Snapshot (metrics)
+3. **How the Business Works — Website View** (capability map, entry points, user journeys)
+4. Business Capabilities in Detail (rules, DB routines, data-touching pages)
+5. **Detailed Business Logic** per File → Class → Method → Purpose → Detailed
+   Business Logic → Validation/Conditional Rules → Called Components/Dependencies →
+   Data Flow/Mappings
+6. Data Architecture, Integrations & Access Control
+7. Risks & Modernization Notes
+
+After it finishes, **read the single `{repo}_BusinessAnalysis.md`** and add senior-
+architect narrative on top. Do NOT read the JSON index in full on huge repos —
+query it selectively or re-run with `--detail-area` for a specific capability.
 
 ---
 
