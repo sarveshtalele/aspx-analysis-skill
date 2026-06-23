@@ -43,30 +43,35 @@ and a confidence level.
 
 ## Files
 
+This is a **GitHub Copilot Agent Skill** (not a prompt file). It lives at
+`.github/skills/reversing-engineering-skill/`.
+
 | File | Purpose |
 |------|---------|
-| `Skill.md` | The skill itself — persona, instructions, and required output format. |
+| `SKILL.md` | The skill itself — frontmatter (`name`, `description`) + persona, instructions, and required output format. |
 | `README.md` | This guide. |
 
 ---
 
 ## How to use
 
-### GitHub Copilot (VS Code)
-1. Copy this folder into your repo, or place `Skill.md` at
-   `.github/prompts/legacy-dotnet.prompt.md` (Copilot auto-discovers `mode: agent`
-   prompt files there).
+### GitHub Copilot (Agent Skill)
+1. Keep this folder at `.github/skills/reversing-engineering-skill/` in your repo
+   (project-wide), or at `~/.github/skills/reversing-engineering-skill/` (personal,
+   all repos). Copilot auto-discovers skills by the `SKILL.md` frontmatter
+   `description`.
 2. Open the `.aspx` and its code-behind.
-3. In Copilot Chat, run `/legacy-dotnet` (or paste `Skill.md`'s contents and add
-   your files).
+3. Ask Copilot to analyze them — it matches the skill on intent (e.g. "extract the
+   business logic from this Web Forms page"). The `name` must equal the folder
+   name (`reversing-engineering-skill`).
 
 ### Claude / Claude Code
-Reference or paste `Skill.md`, then attach the page + code-behind (and any
+Reference or paste `SKILL.md`, then attach the page + code-behind (and any
 helper/service/repository/stored-proc files you have). Ask it to produce the
 analysis.
 
 ### Any other AI assistant
-`Skill.md` is plain markdown — use its body as the system/instruction prompt and
+`SKILL.md` is plain markdown — use its body as the system/instruction prompt and
 supply the source files as input.
 
 ---

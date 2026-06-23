@@ -1,20 +1,6 @@
 ---
-name: Legacy .NET Reverse-Engineering Analysis
-mode: agent
-description: >
-  Reverse-engineer a legacy .NET Framework 4.8 ASP.NET Web Forms application
-  (.aspx / .ascx / .master + C# or VB code-behind) and extract the COMPLETE
-  business logic as structured markdown — end-to-end business workflows, rules,
-  validations, conditions, calculations, field/data transformations, cross-layer
-  dependencies, database interactions, external integrations, and data-flow
-  mappings. Focus on functional/business behavior, not a line-by-line code
-  explanation. Trace logic across UI → business → service → repository → stored
-  procedure whenever the source is available.
-trigger: >
-  Use when asked to analyze or reverse-engineer ASPX / Web Forms code, extract
-  business logic or business rules from legacy .NET, document a screen's
-  functional behavior, or prepare a legacy application for modernization or
-  migration.
+name: reversing-engineering-skill
+description: 'Reverse-engineer a legacy .NET Framework 4.8 ASP.NET Web Forms application (.aspx / .ascx / .master + C# or VB code-behind) and extract the COMPLETE business logic as structured markdown — end-to-end business workflows, rules, validations, conditions, calculations, field/data transformations, cross-layer dependencies, database interactions, external integrations, and data-flow mappings. Focus on functional/business behavior, not a line-by-line code explanation. Use when asked to analyze or reverse-engineer ASPX or Web Forms code, extract business logic or business rules from legacy .NET, document a screen''s functional behavior, trace logic across UI → business → service → repository → stored procedure, or prepare a legacy application for modernization or migration.'
 ---
 
 # Legacy .NET Reverse-Engineering Analysis
