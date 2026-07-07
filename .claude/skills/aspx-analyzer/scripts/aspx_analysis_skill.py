@@ -7,6 +7,11 @@ Analyzes ASP.NET Web Forms applications (.aspx pages, .ascx user controls,
 
 Builds a persistent JSON index on first run. Subsequent queries re-use the
 cached index so 1000+ page repos are analysed once and queried instantly.
+The index build itself streams (read -> parse -> discard, one file at a
+time) and parallelizes across processes by default, so 10,000+ page repos
+build without exhausting memory or the terminal — see --workers/--max-bytes/
+--max-pages below. For a single consolidated business-logic report on truly
+huge repos, aspx_business_analyzer.py in this same folder is the other option.
 
 Usage:
     python aspx_analysis_skill.py <target> [options]
@@ -27,6 +32,10 @@ Options:
     --rebuild           Force re-index (ignore existing cached index)
     --output <dir>      Output directory (default: ./{repo_name}/)
     --save-report       Write the report to a .md file as well as stdout
+    --workers N         Parallel parser processes for the index build
+                        (default: CPU count, capped 8; 1 = serial/debug)
+    --max-bytes N       Skip code-behind files larger than N bytes (default 1500000)
+    --max-pages N       Cap number of .aspx pages parsed (default 0 = no cap)
 
 Examples:
     python aspx_analysis_skill.py https://github.com/org/WebFormsApp
@@ -38,6 +47,7 @@ Examples:
     python aspx_analysis_skill.py . --area Orders --save-report
     python aspx_analysis_skill.py . --view component
     python aspx_analysis_skill.py . --rebuild --view project
+    python aspx_analysis_skill.py . --rebuild --workers 8   # 10,000+ page repo
 """
 
 import sys
@@ -59,8 +69,8 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() not in ('utf-8', 'utf8'):
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
-from engine.aspx_loader  import load_aspx_repo
-from engine.aspx_indexer import build_index, save_index, load_index
+from engine.aspx_stream   import build_index_streaming
+from engine.aspx_indexer  import save_index, load_index
 from engine.aspx_reporter import (
     generate_project_overview,
     generate_pages_report,
@@ -120,6 +130,9 @@ def run(
     rebuild: bool   = False,
     output_dir: str = None,
     save_report: bool = False,
+    workers: int    = None,
+    max_bytes: int  = 1_500_000,
+    max_pages: int  = 0,
 ) -> None:
     print(f"\n{'='*62}")
     print(f"  ASPX Analysis Skill")
@@ -160,20 +173,24 @@ def run(
             print(f"      Pages: {s['total_pages']} | Controls: {s['total_controls']} | "
                   f"Masters: {s['total_masters']}")
         else:
+            resolved_workers = workers if workers is not None else min(8, os.cpu_count() or 2)
             if rebuild and os.path.exists(index_path):
-                print('[2/4] Rebuilding index (--rebuild flag set) …')
+                print(f'[2/4] Rebuilding index (--rebuild flag set, workers={resolved_workers}) …')
             else:
-                print('[2/4] Discovering ASPX files …')
+                print(f'[2/4] Discovering + parsing ASPX files (workers={resolved_workers}, '
+                      f'streaming) …')
 
-            repo_data = load_aspx_repo(repo_path)
+            index = build_index_streaming(
+                repo_path, repo_name, workers=resolved_workers,
+                max_bytes=max_bytes, max_pages=max_pages, with_methods=False,
+            )
 
-            if not any(repo_data.get(k) for k in ('pages', 'controls', 'masters')):
+            if not index['pages'] and not index['user_controls'] and not index['master_pages']:
                 print('\n[!] No ASPX files found. Is this an ASP.NET Web Forms project?')
                 print('    Expected files: *.aspx, *.ascx, *.master')
                 return
 
-            print('[3/4] Building analysis index …')
-            index = build_index(repo_data, repo_name, repo_path)
+            print('[3/4] Saving index …')
             save_index(index, index_path)
 
         # ---- 4. Generate report -----------------------------------------------
@@ -228,6 +245,9 @@ def _parse_args(argv: list) -> dict:
         'rebuild':     False,
         'output_dir':  None,
         'save_report': False,
+        'workers':     None,
+        'max_bytes':   1_500_000,
+        'max_pages':   0,
     }
 
     i = 0
@@ -244,6 +264,12 @@ def _parse_args(argv: list) -> dict:
             result['area'] = args[i + 1]; i += 2
         elif a == '--output' and i + 1 < len(args):
             result['output_dir'] = args[i + 1]; i += 2
+        elif a == '--workers' and i + 1 < len(args):
+            result['workers'] = int(args[i + 1]); i += 2
+        elif a == '--max-bytes' and i + 1 < len(args):
+            result['max_bytes'] = int(args[i + 1]); i += 2
+        elif a == '--max-pages' and i + 1 < len(args):
+            result['max_pages'] = int(args[i + 1]); i += 2
         elif a == '--rebuild':
             result['rebuild'] = True; i += 1
         elif a == '--save-report':
@@ -284,6 +310,9 @@ def main() -> None:
         rebuild     = opts['rebuild'],
         output_dir  = opts['output_dir'],
         save_report = opts['save_report'],
+        workers     = opts['workers'],
+        max_bytes   = opts['max_bytes'],
+        max_pages   = opts['max_pages'],
     )
 
 

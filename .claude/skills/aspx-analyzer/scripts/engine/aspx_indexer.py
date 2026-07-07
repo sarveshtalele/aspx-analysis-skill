@@ -1,9 +1,12 @@
 """
 ASPX Index Builder
 ==================
-Orchestrates parsing of all loaded ASPX records and produces a single
-comprehensive JSON index. The index is the primary data store — all
-report views are generated from it without re-reading source files.
+Shared stats computation, cross-reference linking, and derived-structure
+builders (navigation map, functional areas, component map) for the ASPX
+JSON index. The actual page/control/master parsing + orchestration lives in
+engine.aspx_stream (streaming, memory-safe for 10,000+ files) — this module
+holds the logic BOTH the streaming build path and the report generator
+depend on, plus index load/save.
 
 JSON Index structure:
   project, generated_at, repo_path
@@ -20,115 +23,62 @@ JSON Index structure:
 import json
 import os
 import re
-from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-
-from engine.aspx_parser import (
-    parse_aspx_page,
-    parse_ascx_control,
-    parse_master_page,
-    parse_web_config,
-)
+from typing import Dict, List, Optional
 
 
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
-def build_index(repo_data: dict, repo_name: str, repo_path: str) -> dict:
-    """
-    Build the complete ASPX analysis index from loaded file records.
+_VALIDATOR_TYPES = {
+    'requiredfieldvalidator', 'rangevalidator', 'comparevalidator',
+    'regularexpressionvalidator', 'customvalidator',
+}
 
-    Args:
-        repo_data:  Output of aspx_loader.load_aspx_repo()
-        repo_name:  Repository / project name
-        repo_path:  Absolute path to the repository root
+# Above this many pages, save_index() switches to compact (no-indent) JSON —
+# indentation roughly doubles file size and serialization time on huge repos,
+# and the index is read by tooling, not eyeballed, at that scale.
+_PRETTY_SAVE_THRESHOLD = 500
 
-    Returns:
-        Index dict suitable for JSON serialization.
-    """
-    total_pages    = len(repo_data.get('pages', []))
-    total_controls = len(repo_data.get('controls', []))
-    total_masters  = len(repo_data.get('masters', []))
 
-    print(f"  Parsing {total_pages} pages...")
-    pages = []
-    for i, rec in enumerate(repo_data.get('pages', [])):
-        pages.append(parse_aspx_page(rec))
-        if (i + 1) % 200 == 0:
-            print(f"    ... {i + 1}/{total_pages} pages parsed")
-
-    print(f"  Parsing {total_controls} user controls...")
-    controls = [parse_ascx_control(r) for r in repo_data.get('controls', [])]
-
-    print(f"  Parsing {total_masters} master pages...")
-    masters  = [parse_master_page(r) for r in repo_data.get('masters', [])]
-
-    # Web.config
-    web_config: dict = {}
-    for cfg in repo_data.get('configs', []):
-        if cfg.get('name', '').lower() == 'web.config':
-            web_config = parse_web_config(cfg)
-            break
-
-    # Post-process: back-link controls/masters ← pages
-    print("  Building cross-references...")
-    _link_usages(pages, controls, masters)
-
-    # Parse route configs → route-name resolution map
-    route_map = _parse_route_configs(repo_data.get('routes', []), pages)
-    if route_map:
-        print(f"  Route map: {len(route_map)} named routes resolved")
-
-    # Build derived structures
-    nav_map          = _build_navigation_map(pages, route_map)
-    functional_areas = _build_functional_areas(pages)
-    component_map    = _build_component_map(controls, masters)
-
-    _VALIDATOR_TYPES = {
-        'requiredfieldvalidator', 'rangevalidator', 'comparevalidator',
-        'regularexpressionvalidator', 'customvalidator',
-    }
+def compute_stats(pages: List[dict], controls: List[dict], masters: List[dict],
+                   functional_areas: Dict[str, list], route_map: Dict[str, str],
+                   extra: Optional[dict] = None) -> dict:
+    """Shared stats block — used by both the in-process build path (this
+    module, via engine.aspx_stream) and any future caller, so the fields
+    available to aspx_reporter.py can never drift between code paths."""
     stats = {
-        'total_pages':                  total_pages,
-        'total_controls':               total_controls,
-        'total_masters':                total_masters,
-        'total_functional_areas':       len(functional_areas),
-        'total_named_routes':           len(route_map),
-        'pages_with_ajax':              sum(1 for p in pages if p.get('uses_ajax')),
-        'pages_with_sql_direct':        sum(1 for p in pages if p.get('uses_sql_direct')),
-        'pages_with_master':            sum(1 for p in pages if p.get('master_page')),
-        'pages_with_codebehind':        sum(1 for p in pages if p.get('class_name')),
-        'pages_with_validators':        sum(
+        'total_pages':            len(pages),
+        'total_controls':         len(controls),
+        'total_masters':          len(masters),
+        'total_functional_areas': len(functional_areas),
+        'total_named_routes':     len(route_map),
+        'pages_with_ajax':        sum(1 for p in pages if p.get('uses_ajax')),
+        'pages_with_sql_direct':  sum(1 for p in pages if p.get('uses_sql_direct')),
+        'pages_with_master':      sum(1 for p in pages if p.get('master_page')),
+        'pages_with_codebehind':  sum(1 for p in pages if p.get('class_name')),
+        'pages_with_validators':  sum(
             1 for p in pages
             if any(c['type'] in _VALIDATOR_TYPES for c in p.get('form_controls', []))
         ),
-        'pages_with_display_controls':  sum(1 for p in pages if p.get('display_controls')),
-        'auth_breakdown':               _auth_breakdown(pages),
-        'functional_area_counts':       {a: len(v) for a, v in functional_areas.items()},
+        'auth_breakdown':         _auth_breakdown(pages),
+        'functional_area_counts': {a: len(v) for a, v in functional_areas.items()},
     }
-
-    return {
-        'project':          repo_name,
-        'repo_path':        repo_path,
-        'generated_at':     datetime.utcnow().isoformat() + 'Z',
-        'stats':            stats,
-        'web_config':       web_config,
-        'pages':            pages,
-        'user_controls':    controls,
-        'master_pages':     masters,
-        'functional_areas': functional_areas,
-        'navigation_map':   nav_map,
-        'component_map':    component_map,
-    }
+    if extra:
+        stats.update(extra)
+    return stats
 
 
 def save_index(index: dict, output_path: str) -> str:
-    """Serialize and save the index to disk."""
+    """Serialize and save the index to disk. Auto-picks compact JSON (no
+    indent) once the repo is large enough that pretty-printing meaningfully
+    slows down / bloats the save — see _PRETTY_SAVE_THRESHOLD."""
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+    total_pages = index.get('stats', {}).get('total_pages', 0)
+    indent = 2 if total_pages < _PRETTY_SAVE_THRESHOLD else None
     with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump(index, f, indent=2, ensure_ascii=False, default=str)
+        json.dump(index, f, indent=indent, ensure_ascii=False, default=str)
     size_kb = os.path.getsize(output_path) // 1024
     print(f"  [ok] Index saved -> {output_path}  ({size_kb} KB)")
     return output_path

@@ -47,6 +47,7 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() not in ('utf-8', 'utf8'):
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 from engine.aspx_stream import build_index_streaming
+from engine.aspx_indexer import save_index
 from engine.aspx_business_reporter import generate_business_report
 
 _HELP = __doc__
@@ -62,13 +63,6 @@ def _clone(url, target):
                        capture_output=True, text=True)
     if r.returncode != 0:
         raise RuntimeError(f"git clone failed:\n{r.stderr.strip()}")
-
-
-def _save_compact_index(index, path):
-    """Persist a slimmed index for follow-up queries (drops bulky per-control detail)."""
-    with open(path, 'w', encoding='utf-8') as f:
-        json.dump(index, f, ensure_ascii=False, default=str)  # no indent → smaller
-    return os.path.getsize(path) // 1024
 
 
 def main():
@@ -131,12 +125,12 @@ def main():
                   f"max_bytes={opts['max_bytes']}) ...")
             index = build_index_streaming(
                 repo_path, name, workers=opts['workers'],
-                max_bytes=opts['max_bytes'], max_pages=opts['max_pages'])
+                max_bytes=opts['max_bytes'], max_pages=opts['max_pages'],
+                with_methods=True)
             if not index['pages'] and not index['user_controls'] and not index['master_pages']:
                 print("\n[!] No ASP.NET Web Forms files found (*.aspx/*.ascx/*.master).")
                 return
-            kb = _save_compact_index(index, index_path)
-            print(f"      Index saved ({kb} KB)")
+            save_index(index, index_path)
 
         print("[3/4] Generating consolidated business report ...")
         report = generate_business_report(

@@ -1,31 +1,38 @@
 """
-Streaming ASPX Indexer  (10,000+ file safe)
-===========================================
-Memory-safe replacement for load_aspx_repo + build_index when the repo is huge.
+Streaming ASPX Indexer  (10,000+ file safe — the ONLY build path)
+==================================================================
+Both aspx_analysis_skill.py (5-view report) and aspx_business_analyzer.py
+(consolidated business report) build their index through this module.
 
-Why the old path hangs / kills PowerShell:
-  * load_aspx_repo() reads EVERY file's raw content into in-memory lists
+Why streaming instead of load-everything-then-parse:
+  * Reading every file's raw content into in-memory lists BEFORE parsing
     (pages/controls/masters each holding full `content` + `codebehind_content`)
-    BEFORE parsing — peak memory ≈ whole repo in RAM.
-  * the whole JSON index then holds it all again.
+    pushes peak memory to roughly the whole repo's source size — on 10,000+
+    file repos that exhausts memory and kills the terminal.
+  * Instead: discover paths only (no content read), then process one file at
+    a time (read → parse → keep compact dict → discard raw text). At most
+    one file body is alive per worker at any moment, so memory stays flat
+    regardless of repo size.
 
-This module instead STREAMS: discover paths only, then process one file at a
-time (read → parse → keep compact dict → discard raw text). At most one file
-body is alive per worker. Optional multiprocessing fans the parse out across
-cores; workers return small dicts so memory stays bounded regardless of repo
-size.
+Optional multiprocessing fans the parse out across cores; workers return
+small dicts (pickled back to the main process), never raw file bodies once
+parsed.
 
 Public:
     build_index_streaming(repo_path, repo_name, workers=0,
-                          max_bytes=1_500_000, max_pages=0, progress=True)
-        -> compact index dict (same shape the reporters expect, plus
-           per-page 'methods' for the business report)
+                          max_bytes=1_500_000, max_pages=0,
+                          with_methods=True, progress=True)
+        -> compact index dict (same shape aspx_reporter.py expects; plus
+           per-page 'methods' when with_methods=True, used by the business
+           report — the 5-view report doesn't need them, so
+           aspx_analysis_skill.py passes with_methods=False to skip that
+           extra regex pass over every code-behind file)
 """
 
 import os
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Any
+from typing import List
 from concurrent.futures import ProcessPoolExecutor
 
 from engine.aspx_loader import discover_paths, build_codebehind_map, _read_file
@@ -34,8 +41,8 @@ from engine.aspx_parser import (
 )
 from engine.aspx_method_extractor import extract_methods
 from engine.aspx_indexer import (
-    _link_usages, _parse_route_configs, _build_navigation_map,
-    _build_functional_areas, _build_component_map, _auth_breakdown,
+    compute_stats, _link_usages, _parse_route_configs, _build_navigation_map,
+    _build_functional_areas, _build_component_map,
 )
 
 # generated / designer / minified files never carry business logic
@@ -52,8 +59,9 @@ def _skip_cb(path: str) -> bool:
 # ---------------------------------------------------------------------------
 
 def _process_page(args):
-    """Read one .aspx (+ code-behind), return compact parsed dict + methods."""
-    rec, cb_path, max_bytes = args
+    """Read one .aspx (+ code-behind), return compact parsed dict (+ methods
+    when the caller asked for them)."""
+    rec, cb_path, max_bytes, with_methods = args
     try:
         if os.path.getsize(rec['path']) > max_bytes:
             content = _read_file(rec['path'])[:max_bytes]
@@ -72,7 +80,7 @@ def _process_page(args):
 
     parsed = parse_aspx_page({**rec, 'content': content,
                               'codebehind_content': cb_content})
-    parsed['methods'] = extract_methods(cb_content)
+    parsed['methods'] = extract_methods(cb_content) if with_methods else []
     return parsed
 
 
@@ -102,7 +110,8 @@ def _process_simple(args):
 
 def build_index_streaming(repo_path: str, repo_name: str,
                           workers: int = 0, max_bytes: int = 1_500_000,
-                          max_pages: int = 0, progress: bool = True) -> dict:
+                          max_pages: int = 0, with_methods: bool = True,
+                          progress: bool = True) -> dict:
     repo_path = str(Path(repo_path).resolve())
     if progress:
         print(f"  Discovering files (streaming, memory-safe) in: {repo_path}")
@@ -122,7 +131,7 @@ def build_index_streaming(repo_path: str, repo_name: str,
         lp = rec['path'].lower()
         return cb_map.get(lp) or cb_map.get(lp + '.cs', '')
 
-    page_args = [(r, _cb_for(r), max_bytes) for r in paths['pages']]
+    page_args = [(r, _cb_for(r), max_bytes, with_methods) for r in paths['pages']]
     ctrl_args = [(r, _cb_for(r), 'ascx', max_bytes) for r in paths['controls']]
     mast_args = [(r, _cb_for(r), 'master', max_bytes) for r in paths['masters']]
 
@@ -169,25 +178,13 @@ def build_index_streaming(repo_path: str, repo_name: str,
     functional_areas = _build_functional_areas(pages)
     component_map    = _build_component_map(controls, masters)
 
-    _VAL = {'requiredfieldvalidator', 'rangevalidator', 'comparevalidator',
-            'regularexpressionvalidator', 'customvalidator'}
-    stats = {
-        'total_pages': n_pages, 'total_controls': n_ctrls, 'total_masters': n_mast,
-        'total_functional_areas': len(functional_areas),
-        'total_named_routes': len(route_map),
-        'pages_with_ajax': sum(1 for p in pages if p.get('uses_ajax')),
-        'pages_with_sql_direct': sum(1 for p in pages if p.get('uses_sql_direct')),
-        'pages_with_master': sum(1 for p in pages if p.get('master_page')),
-        'pages_with_codebehind': sum(1 for p in pages if p.get('class_name')),
-        'pages_with_validators': sum(
-            1 for p in pages
-            if any(c['type'] in _VAL for c in p.get('form_controls', []))),
-        'total_methods': sum(len(p.get('methods', [])) for p in pages),
-        'total_stored_procs': len({sp for p in pages for m in p.get('methods', [])
-                                   for sp in m.get('stored_procs', [])}),
-        'auth_breakdown': _auth_breakdown(pages),
-        'functional_area_counts': {a: len(v) for a, v in functional_areas.items()},
-    }
+    extra_stats = {}
+    if with_methods:
+        extra_stats['total_methods'] = sum(len(p.get('methods', [])) for p in pages)
+        extra_stats['total_stored_procs'] = len({
+            sp for p in pages for m in p.get('methods', []) for sp in m.get('stored_procs', [])
+        })
+    stats = compute_stats(pages, controls, masters, functional_areas, route_map, extra=extra_stats)
 
     return {
         'project': repo_name, 'repo_path': repo_path,

@@ -2,18 +2,15 @@
 ASPX File Loader
 ================
 Discovers ASP.NET Web Forms files (.aspx, .ascx, .master, code-behind .cs,
-web.config) from a repository directory.
-
-Two-pass strategy for memory efficiency with 1000+ file repos:
-  Pass 1 — Walk directory tree collecting only file PATHS (no content read).
-            Build code-behind map: aspx_path -> cs_path.
-  Pass 2 — Process one file at a time: read → parse → discard raw content.
-            At most 2 file contents in memory at once (page + code-behind).
+web.config) from a repository directory — path discovery only, no content
+read here. engine.aspx_stream consumes discover_paths()/build_codebehind_map()
+and streams file reads one at a time (read -> parse -> discard), which is
+what keeps memory flat regardless of repo size (10,000+ files included).
 """
 
 import os
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 SKIP_DIRS = {
     '.git', 'bin', 'obj', 'packages', '.vs', 'node_modules',
@@ -38,7 +35,7 @@ def _read_file(path: str) -> str:
         return ''
 
 
-def discover_paths(repo_path: str, max_pages: int = 5000) -> Dict[str, List[dict]]:
+def discover_paths(repo_path: str, max_pages: int = 1_000_000) -> Dict[str, List[dict]]:
     """
     Walk repo_path and collect file paths without reading content.
 
@@ -105,59 +102,3 @@ def build_codebehind_map(paths: Dict[str, List[dict]]) -> Dict[str, str]:
         # Also map by stem (fallback for same-folder, same-name .cs)
         cb_map[p] = rec['path']
     return cb_map
-
-
-def load_aspx_repo(repo_path: str, max_pages: int = 5000) -> Dict[str, list]:
-    """
-    Full load: discover paths then read and return file records.
-
-    Each record has: path, name, filename, rel_path, content, codebehind_content
-    Raw content is included so parsers can extract metadata.
-    After parsing, callers should NOT store raw content in the index.
-
-    Args:
-        repo_path:  Root directory of the repository.
-        max_pages:  Cap on .aspx page count (controls/masters uncapped).
-
-    Returns:
-        dict with keys: pages, controls, masters, configs
-    """
-    repo_path = str(Path(repo_path).resolve())
-
-    print(f"  Discovering files in: {repo_path}")
-    paths = discover_paths(repo_path, max_pages)
-    cb_map = build_codebehind_map(paths)
-
-    print(f"  Found: {len(paths['pages'])} .aspx | {len(paths['controls'])} .ascx | "
-          f"{len(paths['masters'])} .master | {len(paths['cs_files'])} .cs | "
-          f"{len(paths.get('routes', []))} route config(s)")
-
-    def _enrich(rec: dict) -> dict:
-        content = _read_file(rec['path'])
-        # Try code-behind by full path first, then fallback by path + '.cs'
-        cb_path = cb_map.get(rec['path'].lower()) or cb_map.get(rec['path'].lower() + '.cs', '')
-        cb_content = _read_file(cb_path) if cb_path else ''
-        return {**rec, 'content': content, 'codebehind_content': cb_content}
-
-    # Load pages with progress
-    pages = []
-    for i, rec in enumerate(paths['pages']):
-        if i > 0 and i % 200 == 0:
-            print(f"    ... loaded {i}/{len(paths['pages'])} pages")
-        pages.append(_enrich(rec))
-
-    controls = [_enrich(r) for r in paths['controls']]
-    masters  = [_enrich(r) for r in paths['masters']]
-
-    # Config files
-    configs = []
-    for rec in paths['configs']:
-        content = _read_file(rec['path'])
-        configs.append({**rec, 'content': content})
-
-    # Route config files (RouteConfig.cs)
-    routes = []
-    for rec in paths.get('routes', []):
-        routes.append({**rec, 'content': _read_file(rec['path'])})
-
-    return {'pages': pages, 'controls': controls, 'masters': masters, 'configs': configs, 'routes': routes}

@@ -11,19 +11,17 @@ description: >
   For HUGE repos (10,000+ files) use the streaming single-file business analyzer
   (aspx_business_analyzer.py) — memory-safe, multiprocess, emits ONE consolidated
   business-logic markdown file instead of 5.
+  Also emits an OpenSpec handoff: openspec/config.yaml (project context + modernization rules)
+  and one openspec/changes/<area>/proposal.md stub per business capability, for repos that are
+  using OpenSpec (openspec init) to plan a legacy-to-modern migration.
   Trigger when user says: analyze aspx, aspx pages, web forms analysis, page inventory,
   aspx architecture, what pages does this app have, show me the screen flow, show user controls,
   master page analysis, aspx functional view, reverse engineer aspx, analyze this aspx project,
   how does this web forms app work, what is on the Login page, show me the Admin area pages,
+  generate openspec config, prep this repo for modernization, convert this to openspec,
   or provides any GitHub URL for an ASP.NET Web Forms project.
-version: "1.0.0"
-tools:
-  - run_in_terminal
-  - read_file
-  - create_file
-  - insert_edit_into_file
-  - file_search
-  - grep_search
+argument-hint: "[target-repo-path-or-github-url]"
+allowed-tools: Bash(python:*), Bash(python3:*), Read, Write, Glob, Grep
 ---
 
 # ASP.NET Web Forms Application Analyzer
@@ -43,15 +41,24 @@ The analysis produces **5 views** from a single persistent JSON index:
 
 ## ⚡ Large-Repo Fast Mode (10,000+ files) — USE THIS FIRST for big/legacy apps
 
-The original 5-view path reads every file into memory, prints the whole report to
-stdout, and writes 5 MD files + a large JSON. On 10,000+ file repos that exhausts
-memory and **PowerShell / the terminal gets terminated**, and the AI then chokes
-reading 5 big files.
+Both scripts build their index through the same streaming engine
+(`engine/aspx_stream.py`): discover file paths only, then process one file at a
+time (read → parse → keep compact dict → discard raw text), optionally fanned
+out across processes (`--workers`). Peak memory stays flat regardless of repo
+size — this is what makes 10,000+ file repos safe to index at all. They differ
+only in **output**, not in indexing safety:
 
-For big repos run the **streaming single-file business analyzer** instead. It:
-- **Streams** files one at a time (read → parse → keep compact dict → discard raw
-  text). Peak memory stays flat regardless of repo size.
-- Runs the parse across **multiple processes** (`--workers`).
+- `aspx_analysis_skill.py` — 5 separate views (project/pages/functional/
+  component/navigation), full per-page detail. Prints the requested view's
+  full content to stdout — on a 10,000-page repo that stdout dump is what gets
+  slow/unwieldy, not the index build. Prefer `--view project --save-report`
+  (short stdout, full detail in the file) over `--view pages` on huge repos.
+- `aspx_business_analyzer.py` — ONE consolidated business-impact markdown
+  (below) with per-method business logic, and only ever prints a short
+  summary to stdout. **Still the better choice for huge repos** if you want
+  a single narrative document instead of 5 detailed ones.
+
+For big repos, run the **streaming single-file business analyzer**:
 - **Skips** generated/`.designer.cs`/minified files and caps per-file bytes.
 - Prints only a **short summary** to stdout (no flood → no hang).
 - Emits **ONE** `{repo}_BusinessAnalysis.md` (business impact + website-flow view +
@@ -156,7 +163,7 @@ If the user says "rebuild", "re-parse", "fresh analysis", or "update index" → 
 
 The script is at:
 ```
-.github/skills/aspx-analysis-skill/scripts/aspx_analysis_skill.py
+${CLAUDE_SKILL_DIR}/scripts/aspx_analysis_skill.py
 ```
 
 **Check Python:**
@@ -168,33 +175,41 @@ python --version
 
 ```bash
 # GitHub URL
-python .github/skills/aspx-analysis-skill/scripts/aspx_analysis_skill.py \
+python ${CLAUDE_SKILL_DIR}/scripts/aspx_analysis_skill.py \
     https://github.com/org/repo --view project --save-report
 
 # Local path
-python .github/skills/aspx-analysis-skill/scripts/aspx_analysis_skill.py \
+python ${CLAUDE_SKILL_DIR}/scripts/aspx_analysis_skill.py \
     C:\Projects\MyApp --view project --save-report
 
 # Current repo (use absolute path of CWD)
-python .github/skills/aspx-analysis-skill/scripts/aspx_analysis_skill.py \
+python ${CLAUDE_SKILL_DIR}/scripts/aspx_analysis_skill.py \
     . --view project --save-report
 
 # Specific page
-python .github/skills/aspx-analysis-skill/scripts/aspx_analysis_skill.py \
+python ${CLAUDE_SKILL_DIR}/scripts/aspx_analysis_skill.py \
     . --page Login --save-report
 
 # Specific area
-python .github/skills/aspx-analysis-skill/scripts/aspx_analysis_skill.py \
+python ${CLAUDE_SKILL_DIR}/scripts/aspx_analysis_skill.py \
     . --area Administration --save-report
 
 # Re-query from cache (fast, no re-parse)
-python .github/skills/aspx-analysis-skill/scripts/aspx_analysis_skill.py \
+python ${CLAUDE_SKILL_DIR}/scripts/aspx_analysis_skill.py \
     . --view functional
+
+# Large repo (thousands of pages) — parallel workers, no page cap
+python ${CLAUDE_SKILL_DIR}/scripts/aspx_analysis_skill.py \
+    . --view project --save-report --workers 8 --max-pages 0
 ```
 
 **Always add `--save-report`** so you can read the report file in Step 5.
 
-Wait for the script to complete. It prints progress every 200 pages.
+The index build defaults to parallel workers already (CPU count, capped 8) —
+`--workers` only needs to be stated explicitly if the user asks for serial/
+debug mode (`--workers 1`) or a specific worker count.
+
+Wait for the script to complete. It prints progress every 500 pages.
 
 Output produced:
 | File | Description |
@@ -331,7 +346,35 @@ Just run the script with the new `--page` or `--area` flag and `--save-report`.
 
 ---
 
-## Step 8 — Report Completion
+## Step 8 — OpenSpec Handoff (only if the user is using OpenSpec for modernization)
+
+Trigger phrases: "generate openspec config", "prep this for modernization",
+"convert this to openspec", "set up openspec for this migration".
+
+1. Check whether `openspec/` exists at the repo root (`ls openspec/config.yaml 2>/dev/null`).
+   If it does not exist, tell the user to run `openspec init --tools claude` first
+   (this is the separate OpenSpec CLI, not this skill) — it scaffolds
+   `openspec/specs/`, `openspec/changes/`, `openspec/config.yaml`. Do not create
+   that scaffold yourself; only run the emitter once it's present.
+2. Run the emitter against the **already-built** index (no re-parse):
+   ```bash
+   python ${CLAUDE_SKILL_DIR}/scripts/aspx_openspec_emitter.py {index_path} \
+       --openspec-dir {repo_root}/openspec
+   ```
+3. This writes/updates `openspec/config.yaml` (`context:` = architecture summary,
+   auth model, capability list; `rules:` = modernization constraints such as
+   preserving discovered auth roles and flagging direct-SQL pages) and creates
+   one `openspec/changes/<area-slug>/proposal.md` stub per functional area/capability
+   (`## Why` / `## What Changes` / `## Impact`, pre-filled with the legacy page list,
+   auth model, and data-access facts for that capability). Existing proposal.md files
+   are never overwritten — only missing ones are created.
+4. Tell the user which stubs were created and that `## What Changes` / `## Impact`
+   still need their own or OpenSpec's normal proposal-authoring pass — the stub is a
+   starting point, not a finished proposal.
+
+---
+
+## Step 9 — Report Completion
 
 ```
 ASPX Analysis complete ✓
@@ -352,6 +395,9 @@ Available views:
   --view navigation   Page navigation map
   --page <name>       Any specific page deep-dive
   --area <name>       Any functional area deep-dive
+
+OpenSpec handoff (if requested):
+  python ${CLAUDE_SKILL_DIR}/scripts/aspx_openspec_emitter.py {index_path} --openspec-dir {repo_root}/openspec
 ```
 
 ---
@@ -380,3 +426,7 @@ If the script cannot be found or Python is unavailable:
 - **Code-behind** — extracts namespace, class, event handlers, imports, redirects
 - **Auth inference** — [Authorize], User.IsInRole, Request.IsAuthenticated, folder heuristics
 - **Functional area detection** — keyword matching on page name + folder path + imports
+- **OpenSpec handoff is additive and idempotent** — re-running the emitter only fills in
+  missing proposal stubs and refreshes the auto-generated block of `config.yaml`; it never
+  touches user-authored `## What Changes`/`## Impact` content or custom `config.yaml` keys
+  outside that block
