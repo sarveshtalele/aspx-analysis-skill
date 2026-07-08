@@ -8,7 +8,11 @@ handoff (`config.yaml` + per-capability proposal stubs).
 **Doing a legacy modernization with OpenSpec?** See
 [openspec_setup.md](openspec_setup.md) for the complete guide — installing OpenSpec,
 reverse-engineering a legacy repo into it with this skill, and the day-to-day
-Spec-Driven Development loop for building every feature afterward.
+Spec-Driven Development loop for building every feature afterward. See
+[EXAMPLE_WALKTHROUGH.md](EXAMPLE_WALKTHROUGH.md) for a real, fully-verified run of the
+whole thing against a public repo — cloning, analyzing 1147 real pages, setting up
+OpenSpec, and modernizing one real capability (legacy Web Forms grid → ASP.NET Core Web
+API + React/TypeScript) end to end, every command shown.
 
 ---
 
@@ -61,6 +65,8 @@ your-project/
                 ├── aspx_analysis_skill.py       (5-view analyzer, JSON index)
                 ├── aspx_business_analyzer.py    (streaming mode, huge repos)
                 ├── aspx_openspec_emitter.py     (index.json -> openspec/ handoff)
+                ├── aspx_roadmap_emitter.py      (index.json -> MODERNIZATION_ROADMAP.md)
+                ├── aspx_stakeholder_doc_emitter.py (index.json -> STAKEHOLDER_DOCUMENTATION.md)
                 └── engine/                      (loader/parser/indexer/reporter)
 ```
 
@@ -142,6 +148,60 @@ Step 3 writes:
 You (or OpenSpec's own proposal workflow) then flesh out `## What Changes` /
 `## Impact` per capability — the emitter gives you a factual starting point drawn
 from the actual legacy code, not the finished proposal.
+
+---
+
+## Modernization Roadmap (tech-stack setup + build order)
+
+Standalone — doesn't require OpenSpec. Answers "how do I even set up the target stack"
+and "what order do I build things in":
+
+```bash
+python .claude/skills/aspx-analyzer/scripts/aspx_roadmap_emitter.py \
+    ./MyApp/MyApp_aspx_index.json --stack dotnet-webapi-react
+```
+
+Writes `MODERNIZATION_ROADMAP.md` with:
+- **Target stack setup** — real folder layout + real scaffold commands
+  (`dotnet new webapi`, `npm create vite@latest`, ...) for the chosen stack.
+  `--list-stacks` shows all available (`dotnet-webapi-react`, `dotnet-razor-pages`).
+- **Build order** — every functional area ranked simplest-first by an explicit
+  complexity score (direct-SQL pages weighted heaviest — that's the dominant migration
+  cost, not the UI port), each with one concrete "port this page first" suggestion.
+
+Both the stack and the ranking logic are verified against a real migration in
+[EXAMPLE_WALKTHROUGH.md](EXAMPLE_WALKTHROUGH.md), not just designed on paper.
+
+---
+
+## Stakeholder Documentation (business-facing overview)
+
+For a non-technical audience — one document that explains the existing legacy app,
+where modernization stands, where to start, and how the complete project gets built:
+
+```bash
+python .claude/skills/aspx-analyzer/scripts/aspx_stakeholder_doc_emitter.py \
+    ./MyApp/MyApp_aspx_index.json --openspec-dir ./openspec
+```
+
+`--openspec-dir` is optional — omit it if no OpenSpec workspace exists yet; the doc
+still generates, reporting modernization status as "not started." No `openspec` CLI
+install required either way — progress is read directly from `openspec/changes/*/tasks.md`.
+
+Writes `STAKEHOLDER_DOCUMENTATION.md` with:
+- **Executive Summary** — real page/control/master counts, capability count, auth
+  model, direct-SQL risk count, unknown-auth gap count.
+- **Business Capability Inventory** — every functional area with page count,
+  data-access risk, and relative complexity.
+- **Current Modernization Status** — real per-capability OpenSpec task progress, or
+  "not started" if none exists.
+- **Getting Started** — the single lowest-risk capability and its concrete first
+  page to port (same ranking the roadmap emitter uses — imported, not duplicated,
+  so the two documents never disagree).
+- **How to Build the Complete Project, End to End** — the SDD loop stated once,
+  generically, applying to every remaining capability.
+- **Quality & Governance Controls** — the review-gate/verification rules this
+  project's process enforces, in plain language.
 
 ---
 

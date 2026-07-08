@@ -34,7 +34,16 @@ _ATTR_KV = re.compile(r'(\w+)\s*=\s*"([^"]*)"', re.IGNORECASE)
 # ---------------------------------------------------------------------------
 
 _ASPNET_TAG = re.compile(
-    r'<asp:(\w+)\b([^>]*?)(?:/>|>)',
+    # Prefix-agnostic: matches <asp:Button>, <ej:Grid>, <telerik:RadGrid>,
+    # <dx:ASPxGridView>, or any other <TagPrefix:TagName> — third-party
+    # control libraries (Syncfusion, Telerik, DevExpress, Infragistics, ...)
+    # register their own TagPrefix via <%@ Register %> and are just as much
+    # "server controls" as the built-in asp: namespace. Classification below
+    # keys off the tag NAME only (group 1), so this doesn't change behavior
+    # for repos that only use asp:* — it only stops silently dropping every
+    # control from a third-party library, which a hardcoded 'asp:' prefix
+    # was doing on any repo built on one (this one included).
+    r'<\w+:(\w+)\b([^>]*?)(?:/>|>)',
     re.IGNORECASE | re.DOTALL,
 )
 _ID_ATTR       = re.compile(r'\bID\s*=\s*"([^"]+)"',             re.IGNORECASE)
@@ -68,6 +77,10 @@ _FORM_CTRL_TYPES = {
     'calendar', 'multiview', 'wizard', 'panel',
     'gridview', 'detailsview', 'formview', 'listview', 'repeater',
     'datalist', 'datagrid',
+    'grid',  # Syncfusion EJ1/EJ2's own grid tag name (<ej:Grid>/<ejs:Grid>) —
+             # not an asp:* control, but functionally identical to gridview
+             # for has_grid/purpose-inference purposes once the tag-prefix
+             # regex above stops ignoring non-asp: prefixes.
     'requiredfieldvalidator', 'rangevalidator', 'comparevalidator',
     'regularexpressionvalidator', 'customvalidator', 'validationsummary',
 }
@@ -145,7 +158,7 @@ _AREA_KEYWORDS: Dict[str, List[str]] = {
     'Errors':          ['error', '404', '500', 'exception', 'notfound',
                         'unauthorized', 'accessdenied', 'forbidden'],
     'Home':            ['home', 'index', 'default', 'landing', 'welcome', 'main'],
-    'Contact':         ['contact', 'feedback', 'support', 'help', 'faq', 'about'],
+    'Contact':         ['contact', 'feedback', 'customersupport', 'help', 'faq', 'about'],
     'Shipping':        ['ship', 'shipping', 'delivery', 'address', 'warehouse'],
     'Finance':         ['payment', 'invoice', 'refund', 'credit', 'debit',
                         'financial', 'accounting', 'tax'],
@@ -158,6 +171,27 @@ _AREA_KEYWORDS: Dict[str, List[str]] = {
 
 def _parse_attrs(text: str) -> Dict[str, str]:
     return {k.lower(): v for k, v in _ATTR_KV.findall(text)}
+
+
+# Splits camelCase/PascalCase identifiers at lower->upper transitions so keyword
+# matching can find whole words inside concatenated names like "OrderHistory"
+# ("order history") without also matching inside plain compound words like
+# "Border" or "Reorder" (single case-run, no transition — correctly NOT split).
+_CAMEL_SPLIT = re.compile(r'(?<=[a-z0-9])(?=[A-Z])')
+
+
+def _tokenize(text: str) -> str:
+    return _CAMEL_SPLIT.sub(' ', text).lower()
+
+
+def _kw_match(text: str, keywords: List[str]) -> bool:
+    """Whole-word keyword match against already-tokenized (camelCase-split,
+    lowercased) text. Plain substring matching here previously misclassified
+    e.g. 'Border.aspx' into the 'Orders' functional area, because 'order' is
+    a literal substring of 'border' — word-boundary regex on tokenized text
+    fixes that without losing legitimate matches like 'OrderHistory' -> 'order
+    history' (tokenizing inserts the boundary camelCase already implied)."""
+    return any(re.search(rf'\b{re.escape(kw)}\b', text) for kw in keywords)
 
 
 def _infer_subject(name: str, folder: str, imports: List[str]) -> str:
@@ -174,14 +208,14 @@ def _infer_subject(name: str, folder: str, imports: List[str]) -> str:
 
 
 def _infer_functional_area(name: str, folder: str, imports: List[str]) -> str:
-    combined = (name + ' ' + folder.replace('\\', '/').replace('/', ' ')).lower()
+    combined = _tokenize(name + ' ' + folder.replace('\\', '/').replace('/', ' '))
     for area, keywords in _AREA_KEYWORDS.items():
-        if any(kw in combined for kw in keywords):
+        if _kw_match(combined, keywords):
             return area
     # Try imports as a last resort
-    imports_str = ' '.join(imports).lower()
+    imports_str = _tokenize(' '.join(imports))
     for area, keywords in _AREA_KEYWORDS.items():
-        if any(kw in imports_str for kw in keywords):
+        if _kw_match(imports_str, keywords):
             return area
     return 'General'
 

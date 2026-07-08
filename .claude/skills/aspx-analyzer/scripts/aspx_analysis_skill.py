@@ -17,8 +17,11 @@ Usage:
     python aspx_analysis_skill.py <target> [options]
 
 <target>:
-    https://github.com/org/repo    — clone from GitHub
-    /path/to/local/repo            — local directory
+    https://github.com/org/repo    — clone from GitHub (reuses an existing local
+                                     copy named {repo} in the current directory
+                                     instead of re-cloning, if one is present)
+    /path/to/local/repo            — analyze an existing project directly, no
+                                     clone at all — any local path already on disk
     .                              — current working directory
 
 Options:
@@ -36,6 +39,9 @@ Options:
                         (default: CPU count, capped 8; 1 = serial/debug)
     --max-bytes N       Skip code-behind files larger than N bytes (default 1500000)
     --max-pages N       Cap number of .aspx pages parsed (default 0 = no cap)
+    --fresh-clone       For a GitHub URL target: always clone fresh, even if a
+                        local copy named {repo} already exists in the current
+                        directory (default: reuse it, skip the clone)
 
 Examples:
     python aspx_analysis_skill.py https://github.com/org/WebFormsApp
@@ -55,6 +61,7 @@ import os
 import io
 import re
 import shutil
+import stat
 import subprocess
 import tempfile
 from pathlib import Path
@@ -99,6 +106,21 @@ def _repo_name_from_url(url: str) -> str:
     return re.sub(r'[^\w\-]', '_', name)
 
 
+def _force_rmtree(path: str) -> None:
+    """shutil.rmtree(ignore_errors=True) silently fails to delete a fresh git
+    clone on Windows — git marks packed objects read-only, and Python's
+    rmtree doesn't clear that bit before unlinking, so the whole temp clone
+    (not just the .git folder) is orphaned on every single GitHub-URL run.
+    Clear the read-only bit and retry instead of swallowing the error."""
+    def _on_error(func, p, _exc_info):
+        try:
+            os.chmod(p, stat.S_IWRITE)
+            func(p)
+        except Exception:
+            pass
+    shutil.rmtree(path, onerror=_on_error)
+
+
 def _clone(url: str, target: str) -> None:
     print(f"  Cloning {url} …")
     r = subprocess.run(
@@ -133,6 +155,7 @@ def run(
     workers: int    = None,
     max_bytes: int  = 1_500_000,
     max_pages: int  = 0,
+    fresh_clone: bool = False,
 ) -> None:
     print(f"\n{'='*62}")
     print(f"  ASPX Analysis Skill")
@@ -149,10 +172,21 @@ def run(
         # ---- 1. Resolve target ------------------------------------------------
         if _is_github_url(target):
             repo_name = _repo_name_from_url(target)
-            tmp_dir   = tempfile.mkdtemp(prefix='aspx_skill_')
-            repo_path = os.path.join(tmp_dir, repo_name)
-            print('[1/4] Cloning repository …')
-            _clone(target, repo_path)
+            existing_local = os.path.join(os.getcwd(), repo_name)
+            if not fresh_clone and os.path.isdir(existing_local) and os.listdir(existing_local):
+                # Already have this repo on disk (e.g. cloned once into a
+                # persistent workspace) — reuse it instead of a redundant
+                # temp clone. Real value on large repos: re-cloning this
+                # skill's own reference project is a 1.4 GB, multi-minute
+                # operation avoided entirely by this check.
+                repo_path = existing_local
+                print(f'[1/4] Found existing local copy: {repo_path} (skipping clone — '
+                      f'use --fresh-clone to force a fresh one)')
+            else:
+                tmp_dir   = tempfile.mkdtemp(prefix='aspx_skill_')
+                repo_path = os.path.join(tmp_dir, repo_name)
+                print('[1/4] Cloning repository …')
+                _clone(target, repo_path)
         else:
             repo_path = str(Path(target).resolve())
             if not os.path.isdir(repo_path):
@@ -228,7 +262,7 @@ def run(
 
     finally:
         if tmp_dir:
-            shutil.rmtree(tmp_dir, ignore_errors=True)
+            _force_rmtree(tmp_dir)
 
 
 # ---------------------------------------------------------------------------
@@ -248,6 +282,7 @@ def _parse_args(argv: list) -> dict:
         'workers':     None,
         'max_bytes':   1_500_000,
         'max_pages':   0,
+        'fresh_clone': False,
     }
 
     i = 0
@@ -274,6 +309,8 @@ def _parse_args(argv: list) -> dict:
             result['rebuild'] = True; i += 1
         elif a == '--save-report':
             result['save_report'] = True; i += 1
+        elif a == '--fresh-clone':
+            result['fresh_clone'] = True; i += 1
         elif not a.startswith('--') and result['target'] is None:
             result['target'] = a; i += 1
         else:
@@ -313,6 +350,7 @@ def main() -> None:
         workers     = opts['workers'],
         max_bytes   = opts['max_bytes'],
         max_pages   = opts['max_pages'],
+        fresh_clone = opts['fresh_clone'],
     )
 
 

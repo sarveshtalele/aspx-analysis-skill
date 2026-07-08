@@ -14,11 +14,20 @@ description: >
   Also emits an OpenSpec handoff: openspec/config.yaml (project context + modernization rules)
   and one openspec/changes/<area>/proposal.md stub per business capability, for repos that are
   using OpenSpec (openspec init) to plan a legacy-to-modern migration.
+  Also emits a MODERNIZATION_ROADMAP.md: target tech-stack folder layout + scaffold commands,
+  plus every functional area ranked simplest-first (direct-SQL weighted heaviest) with a
+  concrete first-page-to-port suggestion per capability.
+  Also emits a STAKEHOLDER_DOCUMENTATION.md: a business-facing summary (executive summary,
+  capability inventory with risk flags, real OpenSpec progress if present, where to start,
+  and how to build the complete project end-to-end) for non-technical readers.
   Trigger when user says: analyze aspx, aspx pages, web forms analysis, page inventory,
   aspx architecture, what pages does this app have, show me the screen flow, show user controls,
   master page analysis, aspx functional view, reverse engineer aspx, analyze this aspx project,
   how does this web forms app work, what is on the Login page, show me the Admin area pages,
   generate openspec config, prep this repo for modernization, convert this to openspec,
+  generate a roadmap, create a modernization roadmap, what order should I build this in,
+  what tech stack should I use, plan the migration order, stakeholder documentation,
+  business documentation, explain this project to stakeholders, document this for business,
   or provides any GitHub URL for an ASP.NET Web Forms project.
 argument-hint: "[target-repo-path-or-github-url]"
 allowed-tools: Bash(python:*), Bash(python3:*), Read, Write, Glob, Grep
@@ -374,7 +383,78 @@ Trigger phrases: "generate openspec config", "prep this for modernization",
 
 ---
 
-## Step 9 — Report Completion
+## Step 9 — Modernization Roadmap (only if the user wants a build plan, not just facts)
+
+Trigger phrases: "generate a roadmap", "create a modernization roadmap", "what order
+should I build this in", "what tech stack should I use", "plan the migration order".
+
+Does not require OpenSpec — this is a standalone planning artifact, runs against the
+**already-built** index (no re-parse):
+
+```bash
+python ${CLAUDE_SKILL_DIR}/scripts/aspx_roadmap_emitter.py {index_path} \
+    --stack dotnet-webapi-react --output {repo_root}
+```
+
+`--stack` picks the target tech-stack template (`--list-stacks` to see all; default
+`dotnet-webapi-react`, matches the pattern verified in this skill's own worked example —
+see the parent repo's `EXAMPLE_WALKTHROUGH.md`). `--top N` limits the roadmap to the N
+simplest capabilities if the user only wants a first batch, not the whole backlog.
+
+This writes `MODERNIZATION_ROADMAP.md` with:
+1. **Target Stack Setup** — real folder layout + real scaffold commands for the chosen
+   stack (e.g. `dotnet new webapi`, `npm create vite@latest`).
+2. **Build Order** — every functional area, ranked simplest-first by an explicit
+   complexity score (page count + direct-SQL pages weighted heaviest + AJAX pages +
+   unknown-auth pages), each with one concrete "port this page first" suggestion (the
+   lowest-complexity page in that capability) and suggested project/app names.
+
+Tell the user the ranking logic (direct-SQL weighted heaviest, since data-access rewrite —
+not the UI port — is the dominant migration cost) so they can judge whether to follow the
+suggested order or override it for business-priority reasons the analyzer can't see.
+
+---
+
+## Step 10 — Stakeholder Documentation (only if the user wants a business-facing doc)
+
+Trigger phrases: "stakeholder documentation", "business documentation", "explain this
+project to stakeholders", "document this for business", "how do we build the complete
+project" (non-technical framing).
+
+Standalone — runs against the **already-built** index, does not require the OpenSpec CLI
+to be installed (reads `openspec/changes/*/tasks.md` as plain text if `--openspec-dir` is
+given):
+
+```bash
+python ${CLAUDE_SKILL_DIR}/scripts/aspx_stakeholder_doc_emitter.py {index_path} \
+    --openspec-dir {repo_root}/openspec --output {repo_root}
+```
+
+Omit `--openspec-dir` if the repo has no OpenSpec workspace yet — the doc still generates,
+reporting modernization status as "not started."
+
+Writes `STAKEHOLDER_DOCUMENTATION.md` with:
+1. **Executive Summary** — page/control/master counts, capability count, auth model,
+   direct-SQL risk count, unknown-auth gap count — all real numbers from the index.
+2. **Business Capability Inventory** — every functional area with page count, data-access
+   risk (High/Medium/Low), relative complexity — same ranking the roadmap emitter uses.
+3. **Current Modernization Status** — per-OpenSpec-change task progress if `openspec/`
+   changes exist, otherwise "not started yet."
+4. **Getting Started** — the single lowest-risk capability and its concrete first page,
+   matching the roadmap's own "port this first" pick exactly (same scoring function,
+   imported not duplicated).
+5. **How to Build the Complete Project, End to End** — the generic SDD loop (Proposal →
+   Design → Spec → Tasks → verified implementation), stated once, applying to every
+   remaining capability in the table above.
+6. **Quality & Governance Controls** — the review-gate/verification/traceability rules
+   this project's process enforces, in plain language for a non-technical reader.
+
+This document is for people who will never read `openspec/` directly — engineers should
+still use `openspec show`/`openspec status` for day-to-day work.
+
+---
+
+## Step 11 — Report Completion
 
 ```
 ASPX Analysis complete ✓
@@ -418,8 +498,12 @@ If the script cannot be found or Python is unavailable:
 
 - **No API key required** — Claude Code is the AI engine
 - **Cached index** — 1000+ page repos are parsed once; follow-up queries are instant
-- **Local repo support** — pass `.` to analyze the current working directory
-- **GitHub URL support** — shallow-clones the repo, parses, then removes the clone
+- **Local/existing project support** — pass `.` or any local path to analyze a project
+  already on disk directly, no cloning involved at all
+- **GitHub URL support** — shallow-clones the repo, parses, then removes the clone.
+  If a local folder matching the repo name already exists in the current directory
+  (e.g. it was cloned once before), that copy is reused and the clone is skipped —
+  add `--fresh-clone` to force a real clone anyway
 - **ASPX-only** — focused on Web Forms; does not parse MVC Razor views or Blazor
 - **Web.config** — extracts auth mode, Forms Auth login URL, connection strings,
   location access rules, session mode, custom errors

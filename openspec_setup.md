@@ -6,11 +6,17 @@ to reverse-engineering a legacy ASP.NET Web Forms repo into an OpenSpec-friendly
 to running Spec-Driven Development (SDD) day-to-day for every new feature and business
 capability afterward.
 
+**Want to see this actually run against a real repo first?** See
+[EXAMPLE_WALKTHROUGH.md](EXAMPLE_WALKTHROUGH.md) — every command below, run for real
+against [syncfusion/aspnet-ej1-demos](https://github.com/syncfusion/aspnet-ej1-demos)
+(1147 pages), including a full legacy-to-modern migration of one real capability and a
+multi-user collaboration workflow this document doesn't cover.
+
 Two repos are involved and it's easy to mix them up:
 
 - **This repo** (`aspx-analysis-skill`) — ships the `aspx-analyzer` Claude Code skill.
   You don't run OpenSpec *inside* this repo (unless you're extending the skill itself —
-  see [Part G](#part-g--optional-using-openspec-on-this-skill-repo-itself)).
+  see [Part J](#part-j--optional-using-openspec-on-this-skill-repo-itself)).
 - **Your target repo** — the legacy ASP.NET Web Forms app you're modernizing. OpenSpec
   and the aspx-analyzer output both live there.
 
@@ -94,30 +100,65 @@ cd /path/to/YourLegacyWebFormsApp
 openspec init --tools claude
 ```
 
-`--tools claude` tells OpenSpec to generate Claude Code integration (slash commands under
-`.claude/skills/`). Pass `--tools all` to generate integration for every supported AI
-assistant, or `--tools none` for a bare scaffold you wire up manually. `--profile core`
-(default) or `--profile expanded` picks which workflow commands get installed — see
-[Part E](#part-e--day-to-day-sdd-building-every-feature-through-openspec) for the
-difference.
+Verified output (CLI v1.5.0):
+
+```
+- Creating OpenSpec structure...
+▌ OpenSpec structure created
+- Setting up Claude Code...
+✔ Setup complete for Claude Code
+
+OpenSpec Setup Complete
+
+Created: Claude Code
+5 skills and 5 commands in .claude/
+Config: openspec/config.yaml (schema: spec-driven)
+
+Getting started:
+  Start your first change: /opsx:propose "your idea"
+```
+
+(That `/opsx:propose` suggestion in the CLI's own output doesn't match the actual skill
+folder names it just created — `openspec-propose`, not `opsx:propose`. Harmless CLI
+wording quirk in v1.5.0; invoke the real skill by its real name, `openspec-propose`.)
+
+`--tools claude` tells OpenSpec to generate Claude Code integration. Pass `--tools all`
+for every supported AI assistant, or `--tools none` for a bare scaffold you wire up
+manually. **Only `openspec/config.yaml` is created immediately** — `openspec/specs/` and
+`openspec/changes/` don't exist as folders yet; they're created on demand the first time
+you run `openspec new change` (Part D/E), so don't be surprised if you don't see them
+right after `init`.
 
 This creates:
 
 ```
 YourLegacyWebFormsApp/
 ├── openspec/
-│   ├── specs/            ← durable source of truth (empty until your first archive)
-│   ├── changes/          ← in-flight change proposals live here
-│   └── config.yaml       ← project context + rules (schema: spec-driven by default)
+│   └── config.yaml       ← project context + rules (schema: spec-driven)
 └── .claude/
-    └── skills/            ← OpenSpec's own /opsx:* skills (separate from aspx-analyzer)
+    └── skills/
+        ├── openspec-propose/         ← create a change + all 4 artifacts in one step
+        ├── openspec-explore/         ← think through an idea before committing to a change
+        ├── openspec-apply-change/    ← implement a change's tasks.md
+        ├── openspec-sync-specs/      ← merge a change's delta specs into openspec/specs/
+        └── openspec-archive-change/  ← mark a change complete, move it to changes/archive/
 ```
 
-Nothing here is ASPX-specific yet — this is the generic OpenSpec scaffold. The
-ASPX-specific content comes from aspx-analyzer in Part D.
+Each is a real Claude Code Agent Skill under `.claude/skills/<name>/SKILL.md` — same
+discovery mechanism as `aspx-analyzer` itself, just a different provider (OpenSpec, not
+this repo). Nothing here is ASPX-specific yet — that comes from aspx-analyzer in Part D.
 
 If the repo already has some `openspec/` remnants from a previous partial setup, add
 `--force` to auto-clean legacy files before re-scaffolding.
+
+**Correction vs. earlier drafts of this guide:** there is no `--profile expanded` / "core
+vs expanded" split with extra commands (`/opsx:new`, `/opsx:continue`, `/opsx:ff`,
+`/opsx:verify`, `/opsx:bulk-archive`, `/opsx:onboard`) in the actually-installed CLI
+(v1.5.0) — running `openspec config profile expanded` on the profile that does exist,
+`core`, fails with `Unknown profile preset "expanded". Available presets: core`. Take the
+per-artifact CLI workflow in [Part E](#part-e--day-to-day-sdd-building-every-feature-through-openspec)
+(`openspec instructions <artifact> --change <name>`) as the verified granular mechanism
+instead — it's real, and it's what this guide's worked example actually used.
 
 ---
 
@@ -193,16 +234,19 @@ This writes:
 
 ### Step 4 — Turn each stub into a real proposal
 
-The stub gives you *facts*, not a *plan*. For each `openspec/changes/<area>/proposal.md`,
-open it in Claude Code and continue the SDD workflow from Part E — typically:
+The stub gives you *facts*, not a *plan*. But the emitter's stub isn't a full OpenSpec
+`proposal.md` under CLI management yet — it's a plain markdown file the emitter wrote
+directly. To bring it under the same instructions/status/validate machinery as any other
+change, either:
 
-```
-/opsx:continue    (or /opsx:ff to generate specs/design/tasks in one shot)
-```
+- Move its content into a change created the normal way (`openspec new change <name>`,
+  Part E below) and paste the stub's facts into the generated `proposal.md`, or
+- Treat the stub as your own drafting scratchpad and author the real change once you're
+  ready to commit to it, using the stub's `## Why` facts as your starting material.
 
-pointed at that change, so the AI fills in `## What Changes` / `## Impact` and generates
-the accompanying `design.md` + `tasks.md`, informed by the real legacy facts already in
-`## Why` — not a generic greenfield template.
+Either way, once a real change exists, get the remaining artifacts (design, specs, tasks)
+the same way this guide's worked example did — see
+[Part E](#part-e--day-to-day-sdd-building-every-feature-through-openspec).
 
 ---
 
@@ -210,90 +254,133 @@ the accompanying `design.md` + `tasks.md`, informed by the real legacy facts alr
 
 Once Part C/D are done, this is how you build **every subsequent feature or business
 capability** — modernization work or brand-new functionality — through OpenSpec instead
-of ad hoc prompting. All commands below are slash commands Claude Code exposes once
-`openspec init --tools claude` has run in the target repo.
+of ad hoc prompting. Verified end-to-end against CLI v1.5.0 (see
+[EXAMPLE_WALKTHROUGH.md](EXAMPLE_WALKTHROUGH.md) for the full real transcript against
+[syncfusion/aspnet-ej1-demos](https://github.com/syncfusion/aspnet-ej1-demos)).
 
-### Profiles: core vs expanded
-
-```bash
-openspec config profile          # interactive picker
-openspec config profile core     # streamlined (default)
-openspec config profile expanded # granular, step-by-step artifact control
-```
-
-| Profile | Commands available |
-|---|---|
-| **core** (default) | `/opsx:explore`, `/opsx:propose`, `/opsx:apply`, `/opsx:sync`, `/opsx:archive` |
-| **expanded** | adds `/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:bulk-archive`, `/opsx:onboard` |
-
-Start on `core`. Switch to `expanded` once you want fine-grained control over generating
-proposal/specs/design/tasks as separate steps instead of one bundled `/opsx:propose`.
+Only the `core` profile exists in this CLI version — `openspec config profile expanded`
+errors with `Unknown profile preset "expanded". Available presets: core`. `core` gives you
+5 skills: `openspec-propose`, `openspec-explore`, `openspec-apply-change`,
+`openspec-sync-specs`, `openspec-archive-change`. There's a real granular, step-by-step
+mechanism too — it's just CLI-driven (`openspec instructions <artifact> --change <id>`),
+not a separate profile.
 
 ### The loop, every time you build something
 
-```
-1. /opsx:explore "<rough idea or problem statement>"
-   — optional thinking phase, no commitment yet. Use this when you're not sure the
-     feature is well-scoped, e.g. before touching a modernization capability with
-     messy legacy behavior.
+**Fast path — one shot** (small/well-understood change): ask Claude Code to use the
+`openspec-propose` skill with a description of what you want; it creates the change
+directory and all 4 artifacts (proposal/design/specs/tasks) together, then:
 
-2. /opsx:propose "<feature description>"
-   — creates openspec/changes/<change-name>/ with proposal.md + specs + design.md +
-     tasks.md generated together (core profile's quick path).
-   — expanded profile: /opsx:new "<name>" then /opsx:continue (repeat per artifact)
-     or /opsx:ff to fast-forward through all of them at once.
-
-3. Review the generated proposal.md / specs / design.md / tasks.md yourself (or with
-   a teammate) BEFORE implementation starts. This is the actual point of SDD — catch
-   a wrong assumption on paper, not three files into a refactor.
-
-4. /opsx:apply
-   — implements tasks.md's checklist, updating the change's artifacts as it goes if
-     reality diverges from the plan.
-
-5. /opsx:verify        (expanded profile only)
-   — validates the implementation against the specs/design it was built from.
-
-6. /opsx:sync          (optional, either profile)
-   — syncs the change's delta specs into openspec/specs/ before archiving, if you
-     want the durable spec updated ahead of archive.
-
-7. /opsx:archive
-   — marks the change complete, merges its spec deltas into openspec/specs/ (durable
-     source of truth), moves the change folder to history.
+```bash
+openspec validate <change-name> --strict     # catch structural problems
 ```
 
-Repeat step 1-7 for **every feature** — a new Orders capability rewrite, a bugfix with
-behavior implications, an auth model change, anything. The migration proposals seeded by
-aspx-analyzer in Part D are just the first batch of changes fed into this exact same loop.
+review the 4 files yourself (or with a teammate) before implementation — the actual point
+of SDD is catching a wrong assumption on paper, not three files into a refactor — then have
+Claude Code use `openspec-apply-change` to implement `tasks.md`'s checklist.
+
+**Granular path — step by step** (what this guide's worked example actually used, and
+what you need whenever a change is seeded from something other than the propose skill —
+e.g. an aspx-analyzer proposal stub, or you just want to review each artifact before the
+next is generated):
+
+```bash
+openspec new change <name> --description "..." --goal "..."   # 1. create the shell
+openspec instructions proposal --change <name>                # 2. get the proposal template
+#    → author openspec/changes/<name>/proposal.md
+openspec instructions design --change <name>                  # 3. get the design template
+#    → author openspec/changes/<name>/design.md
+openspec instructions specs --change <name>                   # 4. get the specs template
+#    → author openspec/changes/<name>/specs/<capability>/spec.md
+openspec instructions tasks --change <name>                   # 5. get the tasks template
+#    → author openspec/changes/<name>/tasks.md
+openspec status --change <name>                               # confirm 4/4 artifacts complete
+openspec validate <name> --strict                             # confirm structurally valid
+```
+
+`openspec instructions <artifact>` prints the exact write path, the section-by-section
+authoring rules, a fill-in-the-blanks template, and (for design/specs/tasks) which earlier
+artifacts to read first — this is what an AI assistant (or you, by hand) actually follows
+to write each file. Each artifact is gated on the previous one (`openspec status` shows
+`[-] design (blocked by: proposal)` until the proposal exists).
+
+**Then, either path:**
+
+```bash
+# implement tasks.md's checklist (by hand, or ask Claude Code to use openspec-apply-change)
+openspec validate <name> --strict          # re-validate after implementation
+openspec archive <name>                    # merge spec deltas into openspec/specs/, done
+```
+
+**Don't archive a change whose verification tasks aren't actually done.** In this guide's
+worked example, the frontend build was genuinely verified (`npm run build` ran and
+passed) but the backend needed a local .NET SDK not available in the authoring sandbox —
+so that change was deliberately left unarchived with its remaining tasks unchecked, rather
+than archived on the strength of "the files exist." Archiving is a claim that the work is
+actually done and its spec deltas are trustworthy going into `openspec/specs/` — treat it
+that way.
+
+Repeat this loop for **every feature** — a capability modernization, a bugfix with
+behavior implications, brand-new functionality, anything. The proposal stubs seeded by
+aspx-analyzer in Part D are just a starting point fed into this same loop.
 
 ### Checking status mid-flight
 
 ```bash
-openspec list                 # all in-flight changes
-openspec list --specs         # durable specs instead
-openspec show <change-name>   # view one change's artifacts
-openspec status --change <id> # where a change stands in its schema's artifact sequence
-openspec validate <name> --strict   # catch structural problems before /opsx:apply
+openspec list                       # all in-flight changes
+openspec list --specs               # durable specs instead
+openspec show <change-name>         # view one change's artifacts
+openspec status --change <id>       # which artifacts are done / blocked
+openspec validate <name> --strict   # catch structural problems before archiving
 ```
 
 ---
 
 ## Part F — Full CLI Reference
 
-Beyond the OPSX slash commands (Claude Code-facing), the underlying `openspec` CLI has
-its own commands you'll use directly from a terminal:
+Verified against the real, installed CLI (`openspec --version` → `1.5.0`):
+
+```
+$ openspec --help
+Usage: openspec [options] [command]
+
+AI-native system for spec-driven development
+
+Commands:
+  init [options] [path]              Initialize OpenSpec in your project
+  update [options] [path]            Update OpenSpec instruction files
+  list [options]                     List items (changes by default). Use --specs to list specs.
+  view                                Display an interactive dashboard of specs and changes
+  change                              Manage OpenSpec change proposals
+  archive [options] [change-name]    Archive a completed change and update main specs
+  spec                                Manage and view OpenSpec specifications
+  config [options]                    View and modify global OpenSpec configuration
+  schema                              Manage workflow schemas [experimental]
+  store                                Create and manage stores - standalone OpenSpec repos
+  doctor [options]                    Report relationship health for the resolved OpenSpec root
+  context [options]                   Print the working context for the resolved OpenSpec root
+  workset [options]                   Compose, keep, and open personal working views (local)
+  validate [options] [item-name]      Validate changes and specs
+  show [options] [item-name]          Show a change or spec
+  feedback [options] <message>        Submit feedback about OpenSpec
+  completion                          Manage shell completions
+  status [options]                    Display artifact completion status for a change
+  instructions [options] [artifact]   Output enriched instructions for creating an artifact
+  templates [options]                 Show resolved template paths for all artifacts
+  schemas [options]                   List available workflow schemas with descriptions
+  new                                  Create new items
+```
 
 ### Setup
 ```
-openspec init [path] [--tools <list>] [--force] [--profile <core|expanded>]
+openspec init [path] [--tools <list>] [--force]
 openspec update [path] [--force]              # refresh generated AI-tool instructions
 ```
 
 ### Browsing
 ```
 openspec list [--specs|--changes] [--sort recent|name] [--json]
-openspec view                                 # interactive browser
+openspec view                                 # interactive dashboard
 openspec show <item-name> [--type change|spec] [--requirements] [--no-scenarios]
 ```
 
@@ -305,11 +392,12 @@ openspec validate <name> [--all] [--changes] [--specs] [--strict] [--json]
 ### Lifecycle
 ```
 openspec new change <name> [--description <text>] [--goal <text>] [--schema <name>]
-openspec archive <change-name> [-y] [--skip-specs] [--no-validate]
 openspec status [--change <id>] [--schema <name>]
+openspec instructions [artifact] --change <id>   # exact write-path + template for that artifact
+openspec archive [change-name] [-y] [--skip-specs] [--no-validate]
 ```
 
-### Schemas (custom workflow templates)
+### Schemas (custom workflow templates — experimental)
 ```
 openspec schemas [--json]                     # list schemas available in this project
 openspec schema init <name> [--artifacts <list>] [--default]
@@ -317,8 +405,10 @@ openspec schema fork <source> [name]          # copy + customize an existing sch
 openspec schema validate [name] [--verbose]
 openspec schema which [name] [--all]
 openspec templates [--schema <name>]          # inspect a schema's artifact templates
-openspec instructions [artifact] --change <id> # the exact instructions an artifact step gets
 ```
+
+Verified: a fresh install has exactly one schema, `spec-driven` (proposal → specs →
+design → tasks) — `openspec schemas` confirms nothing else ships by default.
 
 ### Configuration
 ```
@@ -328,7 +418,7 @@ openspec config get <key>
 openspec config set <key> <value>
 openspec config unset <key>
 openspec config edit                          # open in $EDITOR
-openspec config profile [core|expanded]
+openspec config profile [preset]              # only "core" preset exists in v1.5.0
 ```
 
 ### Health
@@ -393,7 +483,7 @@ For a legacy repo being modernized with both tools in play:
 ```
 YourLegacyWebFormsApp/
 ├── openspec/
-│   ├── specs/                        durable source of truth (grows via /opsx:archive)
+│   ├── specs/                        durable source of truth (grows via `openspec archive`)
 │   ├── changes/
 │   │   ├── authentication/proposal.md    ← seeded by aspx-analyzer, fleshed out via SDD
 │   │   ├── orders/proposal.md
@@ -430,15 +520,16 @@ No. Proposal stubs are created only if missing; `config.yaml` is only touched in
 marked auto-generated block. Anything you wrote in `## What Changes`/`## Impact`, or
 added to `config.yaml` outside the markers, is preserved.
 
-**Which slash commands exist depends on my profile — how do I check?**
-`openspec config profile` shows/sets it. `core` = propose/apply/sync/archive/explore.
-`expanded` adds new/continue/ff/verify/bulk-archive/onboard.
+**What profile am I on and what does it give me?**
+`openspec config profile` shows it (`openspec config list` shows the resolved workflow set
+too). v1.5.0 only ships `core`: `openspec-propose`, `openspec-explore`,
+`openspec-apply-change`, `openspec-sync-specs`, `openspec-archive-change`.
 
 **I want OpenSpec's spec-driven flow for brand-new features that have nothing to do with
 the legacy migration.**
-Same loop, Part E, starting from `/opsx:propose` directly — you don't need aspx-analyzer
-at all for greenfield work. aspx-analyzer only matters for seeding proposals from
-*existing* legacy code.
+Same loop, Part E, starting from `openspec new change <name>` (or the `openspec-propose`
+skill) directly — you don't need aspx-analyzer at all for greenfield work. aspx-analyzer
+only matters for seeding proposals from *existing* legacy code.
 
 ---
 
@@ -448,4 +539,5 @@ If you want to develop **`aspx-analysis-skill` itself** (this repo) with SDD —
 adding a new report view or extending the engine — nothing above changes conceptually,
 you just run `openspec init --tools claude` here instead of in a target legacy app, and
 skip Part D entirely (there's no legacy ASPX code in this repo to reverse-engineer; you'd
-go straight to Part E's `/opsx:propose` loop for each new capability you add to the skill).
+go straight to Part E's loop, `openspec new change <name>`, for each new capability you
+add to the skill).

@@ -27,6 +27,9 @@ Options:
     --max-files N      Cap detailed-logic pages when not --full-detail (default 40).
     --rebuild          Ignore cached index and re-parse.
     --output DIR       Output directory (default ./{repo_name}/).
+    --fresh-clone      For a GitHub URL target: always clone fresh, even if a
+                       local copy named {repo_name} already exists in the
+                       current directory (default: reuse it, skip the clone).
 
 Examples:
     python aspx_business_analyzer.py .
@@ -35,7 +38,7 @@ Examples:
     python aspx_business_analyzer.py https://github.com/org/App --max-files 60
 """
 
-import sys, os, io, re, json, shutil, subprocess, tempfile
+import sys, os, io, re, json, shutil, stat, subprocess, tempfile
 from pathlib import Path
 
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -57,6 +60,18 @@ def _is_github(s): return s.startswith(('https://github.com/', 'http://github.co
 def _repo_name(url): return re.sub(r'[^\w\-]', '_', url.rstrip('/').removesuffix('.git').split('/')[-1])
 
 
+def _force_rmtree(path):
+    """See aspx_analysis_skill.py's _force_rmtree — ignore_errors=True silently
+    orphans every temp git clone on Windows (read-only packed objects)."""
+    def _on_error(func, p, _exc_info):
+        try:
+            os.chmod(p, stat.S_IWRITE)
+            func(p)
+        except Exception:
+            pass
+    shutil.rmtree(path, onerror=_on_error)
+
+
 def _clone(url, target):
     print(f"  Cloning {url} ...")
     r = subprocess.run(['git', 'clone', '--depth=1', url, target],
@@ -72,7 +87,7 @@ def main():
     args = sys.argv[1:]
     opts = {'target': None, 'workers': None, 'max_bytes': 1_500_000, 'max_pages': 0,
             'detail_area': None, 'full_detail': False, 'max_files': 40,
-            'rebuild': False, 'output': None}
+            'rebuild': False, 'output': None, 'fresh_clone': False}
     i = 0
     while i < len(args):
         a = args[i]
@@ -85,6 +100,7 @@ def main():
         elif a == '--output':      opts['output'] = args[i+1]; i += 2
         elif a == '--full-detail': opts['full_detail'] = True; i += 1
         elif a == '--rebuild':     opts['rebuild'] = True; i += 1
+        elif a == '--fresh-clone': opts['fresh_clone'] = True; i += 1
         elif not a.startswith('--') and opts['target'] is None: opts['target'] = a; i += 1
         else: i += 1
 
@@ -101,10 +117,16 @@ def main():
     try:
         if _is_github(target):
             name = _repo_name(target)
-            tmp = tempfile.mkdtemp(prefix='aspx_biz_')
-            repo_path = os.path.join(tmp, name)
-            print(f"[1/4] Cloning {target}")
-            _clone(target, repo_path)
+            existing_local = os.path.join(os.getcwd(), name)
+            if not opts['fresh_clone'] and os.path.isdir(existing_local) and os.listdir(existing_local):
+                repo_path = existing_local
+                print(f"[1/4] Found existing local copy: {repo_path} (skipping clone — "
+                      f"use --fresh-clone to force a fresh one)")
+            else:
+                tmp = tempfile.mkdtemp(prefix='aspx_biz_')
+                repo_path = os.path.join(tmp, name)
+                print(f"[1/4] Cloning {target}")
+                _clone(target, repo_path)
         else:
             repo_path = str(Path(target).resolve())
             if not os.path.isdir(repo_path):
@@ -158,7 +180,7 @@ def main():
         print("  Tip: --detail-area <Area> --full-detail for deep per-method detail of one area.")
     finally:
         if tmp:
-            shutil.rmtree(tmp, ignore_errors=True)
+            _force_rmtree(tmp)
 
 
 if __name__ == '__main__':
